@@ -11,8 +11,13 @@ namespace Core
     /// <summary>
     /// Represents a basic state machine.
     /// </summary>
-    public class StateMachine(SpriteBatch spriteBatch)
+    public class StateMachine(Game game, SpriteBatch spriteBatch)
     {
+        /// <summary>
+        /// The game instance associated with this state machine.
+        /// </summary>
+        public readonly Game Game = game;
+
         /// <summary>
         /// The sprite batch used for rendering.
         /// </summary>
@@ -68,9 +73,9 @@ namespace Core
             ArgumentNullException.ThrowIfNull(name);
             if (!states.TryGetValue(name, out State? value))
                 throw new InvalidOperationException($"State with name '{name}' does not exist.");
-            Current?.State.OnExit();
+            Current?.State.OnExit(this, game);
             Current = (name, value);
-            Current?.State.OnEnter();
+            Current?.State.OnEnter(this, game);
         }
 
         public void Draw(Game game, GameTime time)
@@ -85,6 +90,13 @@ namespace Core
             if (Current == null)
                 return;
             Current.Value.State.Update(this, game, time);
+        }
+
+        public void OnResize(Vector2 size)
+        {
+            if (Current == null)
+                return;
+            Current.Value.State.OnResize(size);
         }
     }
 }

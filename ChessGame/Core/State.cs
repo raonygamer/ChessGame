@@ -21,12 +21,27 @@ namespace Core
         /// <summary>
         /// Called when the state is entered.
         /// </summary>
-        public virtual void OnEnter() { }
+        public virtual void OnEnter(StateMachine machine, Game game) 
+        {
+            OnResize(new Vector2(game.Window.ClientBounds.Width, game.Window.ClientBounds.Height));
+        }
 
         /// <summary>
         /// Called when the state is exited.
         /// </summary>
-        public virtual void OnExit() { }
+        public virtual void OnExit(StateMachine machine, Game game) { }
+
+        /// <summary>
+        /// Called when the game window is resized.
+        /// </summary>
+        /// <param name="size">The new game window size.</param>
+        public virtual void OnResize(Vector2 size) 
+        {
+            foreach (var node in nodes.OfType<CanvasNode>())
+            {
+                node.Size = size;
+            }
+        }
 
         /// <summary>
         /// Called when the state should draw itself and its nodes.
@@ -38,7 +53,7 @@ namespace Core
             foreach (var node in nodes)
             {
                 if (node.IsActive)
-                    node.Draw(this, machine, game, time);
+                    node.Draw(new StateContext(machine, this, game), time);
             }
             machine.SpriteBatch.End();
         }
@@ -52,7 +67,7 @@ namespace Core
             foreach (var node in nodes)
             {
                 if (node.IsActive)
-                    node.Update(this, machine, game, time);
+                    node.Update(new StateContext(machine, this, game), time);
             }
         }
 

@@ -11,7 +11,7 @@ namespace Core
     /// <summary>
     /// Represents a basic sprite node.
     /// </summary>
-    public class Sprite : Node2D
+    public class SpriteNode : Node2D
     {
         /// <summary>
         /// The texture of this sprite. Can be null.
@@ -29,11 +29,6 @@ namespace Core
         public Color Color { get; set; } = Color.White;
 
         /// <summary>
-        /// The origin point for rotation and scaling. Default is (0,0) (top-left corner).
-        /// </summary>
-        public Vector2 Origin { get; set; } = Vector2.Zero;
-
-        /// <summary>
         /// The sprite effects to apply when drawing. Default is none.
         /// </summary>
         public SpriteEffects Effects { get; set; } = SpriteEffects.None;
@@ -43,12 +38,12 @@ namespace Core
         /// </summary>
         public float LayerDepth { get; set; } = 0f;
 
-        public override void Draw(State state, StateMachine machine, Game game, GameTime time)
+        public override void Draw(StateContext ctx, GameTime time)
         {
-            base.Draw(state, machine, game, time);
+            base.Draw(ctx, time);
             if (Texture != null)
             {
-                machine.SpriteBatch.Draw(Texture, WorldPosition, SourceRectangle, Color, WorldRotation, new Vector2(Texture.Bounds.Width, Texture.Bounds.Height) * Origin, WorldScale, Effects, LayerDepth);
+                ctx.SpriteBatch.Draw(Texture, WorldPosition, SourceRectangle, Color, WorldRotation, new Vector2(Texture.Bounds.Width, Texture.Bounds.Height) * Transform.Origin, WorldScale, Effects, LayerDepth);
             }
         }
     }

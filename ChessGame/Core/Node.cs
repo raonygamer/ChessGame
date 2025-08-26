@@ -37,13 +37,25 @@ namespace Core
         /// Called when the node should draw itself.
         /// </summary>
         /// <param name="time">Current game time.</param>
-        public virtual void Draw(State state, StateMachine machine, Game game, GameTime time) { }
+        public virtual void Draw(StateContext ctx, GameTime time)
+        {
+            foreach (var child in Children)
+            {
+                child.Draw(ctx, time);
+            }
+        }
 
         /// <summary>
         /// Called when the node should update itself.
         /// </summary>
         /// <param name="time">Current game time.</param>
-        public virtual void Update(State state, StateMachine machine, Game game, GameTime time) { }
+        public virtual void Update(StateContext ctx, GameTime time)
+        {
+            foreach (var child in Children)
+            {
+                child.Update(ctx, time);
+            }
+        }
 
         /// <summary>
         /// Sets the parent of this node. Throws an exception if the parent is this node or if it would create a cyclic relationship.

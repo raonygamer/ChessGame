@@ -35,9 +35,9 @@ namespace ChessGame
         protected override void LoadContent()
         {
             SpriteBatch = new SpriteBatch(GraphicsDevice);
-            StateMachine = new StateMachine(SpriteBatch);
-            StateMachine.AddState("main", new MainState(this));
-            StateMachine.ChangeState("main");
+            StateMachine = new StateMachine(this, SpriteBatch);
+            StateMachine.AddState("ui_test", new UITestState(this));
+            StateMachine.ChangeState("ui_test");
         }
 
         protected override void Update(GameTime gameTime)
@@ -69,6 +69,7 @@ namespace ChessGame
         private void OnResize(int width, int height)
         {
             GraphicsDevice.Viewport = new Viewport(0, 0, width, height);
+            StateMachine.OnResize(new Vector2(width, height));
         }
     }
 }

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Core
 {
     /// <summary>
-    /// Represents a 2D node with position, rotation, and scale.
+    /// Represents a 2D node with position, rotation, scale and origin.
     /// </summary>
     public class Node2D : Node
     {

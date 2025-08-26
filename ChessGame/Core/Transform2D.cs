@@ -55,6 +55,11 @@ namespace Core
         }
 
         /// <summary>
+        /// The origin point for position, rotation and scaling. Default is (0,0) (top-left corner).
+        /// </summary>
+        public Vector2 Origin { get; set; } = Vector2.Zero;
+
+        /// <summary>
         /// Called when the position changes.
         /// </summary>
         public event Action<Transform2D>? OnPositionChanged;
