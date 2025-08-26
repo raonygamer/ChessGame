@@ -1,8 +1,7 @@
-﻿using ChessGame.ECS;
-using ChessGame.ECS.Components;
-using EnTTSharp.Entities;
+﻿using Core;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using States;
 using System;
 
 namespace ChessGame
@@ -20,8 +19,7 @@ namespace ChessGame
     {
         public GraphicsDeviceManager Graphics { get; private set; }
         public SpriteBatch SpriteBatch { get; private set; } = null!;
-        public RegistryManager RegistryManager { get; private set; }
-        public ChessGame ChessGame { get; private set; }
+        public StateMachine StateMachine { get; private set; } = null!;
         private Point _lastSize;
 
         public GameMain()
@@ -32,14 +30,14 @@ namespace ChessGame
             Content.RootDirectory = "Content";
             IsFixedTimeStep = false;
             IsMouseVisible = true;
-            RegistryManager = new RegistryManager(this);
-            ChessGame = new ChessGame();
         }
 
         protected override void LoadContent()
         {
             SpriteBatch = new SpriteBatch(GraphicsDevice);
-            ChessGame.Load(this, RegistryManager);
+            StateMachine = new StateMachine(SpriteBatch);
+            StateMachine.AddState("main", new MainState(this));
+            StateMachine.ChangeState("main");
         }
 
         protected override void Update(GameTime gameTime)
@@ -51,14 +49,14 @@ namespace ChessGame
                 OnResize(currentSize.X, currentSize.Y);
             }
 
-            RegistryManager.Update(gameTime);
             base.Update(gameTime);
+            StateMachine.Update(this, gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
-            RegistryManager.Draw(gameTime);
             base.Draw(gameTime);
+            StateMachine.Draw(this, gameTime);
         }
 
         protected override void Initialize()
