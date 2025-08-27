@@ -709,6 +709,16 @@
 /processorParam:TextureFormat=Color
 /build:Boards/yalta4.png
 
+#begin Fonts/vcr.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/vcr.spritefont
+
+#begin Fonts/vcr.ttf
+/copy:Fonts/vcr.ttf
+
 #begin Pieces/black-bishop.png
 /importer:TextureImporter
 /processor:TextureProcessor

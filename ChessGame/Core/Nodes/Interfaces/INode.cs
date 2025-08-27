@@ -1,32 +1,32 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Core.Nodes.Interfaces
+namespace Core.Nodes.Interfaces;
+
+/// <summary>
+///     The base interface for all nodes.
+/// </summary>
+public interface INode
 {
     /// <summary>
-    /// The base interface for all nodes.
+    ///     Whether this node is active. Inactive nodes will not be updated or drawn.
     /// </summary>
-    public interface INode
-    {
-        /// <summary>
-        /// Whether this node is active. Inactive nodes will not be updated or drawn.
-        /// </summary>
-        bool IsActive { get; set; }
+    bool IsActive { get; set; }
 
-        /// <summary>
-        /// Called when the node should draw itself.
-        /// </summary>
-        /// <param name="time">Current game time.</param>
-        void Draw(StateContext ctx, GameTime time);
+    /// <summary>
+    ///     The layer of this node. Nodes with higher layer values are drawn and updated on top of nodes with lower layer
+    ///     values.
+    /// </summary>
+    int Layer { get; set; }
 
-        /// <summary>
-        /// Called when the node should update itself.
-        /// </summary>
-        /// <param name="time">Current game time.</param>
-        void Update(StateContext ctx, GameTime time);
-    }
+    /// <summary>
+    ///     Called when the node should draw itself.
+    /// </summary>
+    /// <param name="time">Current game time.</param>
+    void Draw(StateContext ctx, GameTime time);
+
+    /// <summary>
+    ///     Called when the node should update itself.
+    /// </summary>
+    /// <param name="time">Current game time.</param>
+    void Update(StateContext ctx, GameTime time);
 }

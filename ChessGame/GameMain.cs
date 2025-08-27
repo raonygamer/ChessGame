@@ -2,75 +2,72 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using States;
-using System;
 
-namespace ChessGame
+internal static class Program
 {
-    internal static class Program
+    private static void Main()
     {
-        static void Main()
-        {
-            using var game = new GameMain();
-            game.Run();
-        }
+        using var game = new GameMain();
+        game.Run();
+    }
+}
+
+public class GameMain : Game
+{
+    private Point lastSize;
+
+    public GameMain()
+    {
+        Graphics = new GraphicsDeviceManager(this);
+        Graphics.SynchronizeWithVerticalRetrace = true;
+        Graphics.ApplyChanges();
+        Content.RootDirectory = "Content";
+        IsFixedTimeStep = false;
+        IsMouseVisible = true;
     }
 
-    public class GameMain : Game
+    public GraphicsDeviceManager Graphics { get; }
+    public SpriteBatch SpriteBatch { get; private set; } = null!;
+    public StateMachine StateMachine { get; private set; } = null!;
+
+    protected override void LoadContent()
     {
-        public GraphicsDeviceManager Graphics { get; private set; }
-        public SpriteBatch SpriteBatch { get; private set; } = null!;
-        public StateMachine StateMachine { get; private set; } = null!;
-        private Point _lastSize;
+        SpriteBatch = new SpriteBatch(GraphicsDevice);
+        StateMachine = new StateMachine(this, SpriteBatch);
+        StateMachine.AddState("ui_test", new UITestState(this));
+        StateMachine.AddState("ui_test2", new UITestState2(this));
+        StateMachine.ChangeState("ui_test");
+    }
 
-        public GameMain()
+    protected override void Update(GameTime gameTime)
+    {
+        var currentSize = new Point(Window.ClientBounds.Width, Window.ClientBounds.Height);
+        if (currentSize != lastSize)
         {
-            Graphics = new GraphicsDeviceManager(this);
-            Graphics.SynchronizeWithVerticalRetrace = true;
-            Graphics.ApplyChanges();
-            Content.RootDirectory = "Content";
-            IsFixedTimeStep = false;
-            IsMouseVisible = true;
+            lastSize = currentSize;
+            OnResize(currentSize.X, currentSize.Y);
         }
 
-        protected override void LoadContent()
-        {
-            SpriteBatch = new SpriteBatch(GraphicsDevice);
-            StateMachine = new StateMachine(this, SpriteBatch);
-            StateMachine.AddState("ui_test", new UITestState(this));
-            StateMachine.AddState("ui_test2", new UITestState2(this));
-            StateMachine.ChangeState("ui_test");
-        }
+        base.Update(gameTime);
+        StateMachine.Update(this, gameTime);
+    }
 
-        protected override void Update(GameTime gameTime)
-        {
-            var currentSize = new Point(Window.ClientBounds.Width, Window.ClientBounds.Height);
-            if (currentSize != _lastSize)
-            {
-                _lastSize = currentSize;
-                OnResize(currentSize.X, currentSize.Y);
-            }
+    protected override void Draw(GameTime gameTime)
+    {
+        base.Draw(gameTime);
+        StateMachine.Draw(this, gameTime);
+    }
 
-            base.Update(gameTime);
-            StateMachine.Update(this, gameTime);
-        }
+    protected override void Initialize()
+    {
+        Window.AllowUserResizing = true;
+        lastSize = new Point(Window.ClientBounds.Width, Window.ClientBounds.Height);
+        base.Initialize();
+    }
 
-        protected override void Draw(GameTime gameTime)
-        {
-            base.Draw(gameTime);
-            StateMachine.Draw(this, gameTime);
-        }
-
-        protected override void Initialize()
-        {
-            Window.AllowUserResizing = true;
-            _lastSize = new Point(Window.ClientBounds.Width, Window.ClientBounds.Height);
-            base.Initialize();
-        }
-
-        private void OnResize(int width, int height)
-        {
-            GraphicsDevice.Viewport = new Viewport(0, 0, width, height);
-            StateMachine.OnResize(new Vector2(width, height));
-        }
+    private void OnResize(int width, int height)
+    {
+        GraphicsDevice.Viewport = new Viewport(0, 0, width, height);
+        StateMachine.OnResize(new Vector2(width, height));
     }
 }

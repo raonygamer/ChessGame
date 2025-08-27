@@ -1,109 +1,139 @@
-﻿using Core.Nodes;
-using Core.Nodes.Interfaces;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Core.Nodes;
+using Core.Nodes.Interfaces;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
-namespace Core
+namespace Core;
+
+/// <summary>
+///     Represents a basic state.
+/// </summary>
+public abstract class State
 {
+    private readonly List<INode> nodes = [];
+
     /// <summary>
-    /// Represents a basic state.
+    ///     The collection of nodes managed by this instance.
     /// </summary>
-    public abstract class State
+    public IReadOnlyList<INode> Nodes => nodes;
+
+    /// <summary>
+    ///     The debug info node. This node is always on top of all other nodes.
+    /// </summary>
+    public CanvasNode DebugInfoNode = new();
+
+    public State(Game game)
     {
-        private readonly List<INode> nodes = [];
-        /// <summary>
-        /// The collection of nodes managed by this instance.
-        /// </summary>
-        public IReadOnlyList<INode> Nodes => nodes;
-
-        /// <summary>
-        /// Called when the state is entered.
-        /// </summary>
-        public virtual void OnEnter(StateMachine machine, Game game) 
+        DebugInfoNode.Layer = int.MaxValue;
+        var blackImage = new Texture2D(game.GraphicsDevice, 256, 256);
+        blackImage.SetData(Enumerable.Repeat(Color.Black, blackImage.Width * blackImage.Height).ToArray());
+        var debugBackground = new ImageNode
         {
-            OnResize(new Vector2(game.Window.ClientBounds.Width, game.Window.ClientBounds.Height));
-        }
-
-        /// <summary>
-        /// Called when the state is exited.
-        /// </summary>
-        public virtual void OnExit(StateMachine machine, Game game) { }
-
-        /// <summary>
-        /// Called when the game window is resized.
-        /// </summary>
-        /// <param name="size">The new game window size.</param>
-        public virtual void OnResize(Vector2 size) 
-        {
-            foreach (var node in nodes.OfType<CanvasNode>())
+            Texture = blackImage,
+            Color = new Color(0, 0, 0, 0.5f),
+            Transform =
             {
-                node.Transform.Size = size;
+                Parent = DebugInfoNode.Transform,
+                AnchorPoint = Vector2.Zero,
+                Pivot = Vector2.Zero,
+                LocalPosition = new Vector2(10, 10),
+                LocalScale = new Vector2(0.3f, 0.3f)
             }
-        }
+        };
+        AddNode(DebugInfoNode);
+        AddNode(debugBackground);
+    }
+    
+    /// <summary>
+    ///     Called when the state is entered.
+    /// </summary>
+    public virtual void OnEnter(StateMachine machine, Game game)
+    {
+        OnResize(new Vector2(game.Window.ClientBounds.Width, game.Window.ClientBounds.Height));
+    }
 
-        /// <summary>
-        /// Called when the state should draw itself and its nodes.
-        /// </summary>
-        /// <param name="time">The game time.</param>
-        public virtual void Draw(StateMachine machine, Game game, GameTime time)
-        {
-            machine.SpriteBatch.Begin();
-            foreach (var node in nodes)
+    /// <summary>
+    ///     Called when the state is exited.
+    /// </summary>
+    public virtual void OnExit(StateMachine machine, Game game)
+    {
+    }
+
+    /// <summary>
+    ///     Called when the game window is resized.
+    /// </summary>
+    /// <param name="size">The new game window size.</param>
+    public virtual void OnResize(Vector2 size)
+    {
+        foreach (var node in nodes.OfType<CanvasNode>()) node.Transform.Size = size;
+    }
+
+    /// <summary>
+    ///     Called when the state should draw itself and its nodes.
+    /// </summary>
+    /// <param name="time">The game time.</param>
+    public virtual void Draw(StateMachine machine, Game game, GameTime time)
+    {
+        machine.SpriteBatch.Begin(
+            SpriteSortMode.Immediate,
+            BlendState.AlphaBlend,
+            rasterizerState: new RasterizerState
             {
-                if (node.IsActive)
-                    node.Draw(new StateContext(machine, this, game), time);
+                ScissorTestEnable = true
             }
-            machine.SpriteBatch.End();
-        }
+        );
+        
+        foreach (var node in nodes.OrderBy(c => c.Layer))
+            if (node.IsActive)
+                node.Draw(new StateContext(machine, this, game), time);
 
-        /// <summary>
-        /// Called when the state should update itself and its nodes.
-        /// </summary>
-        /// <param name="time">The game time.</param>
-        public virtual void Update(StateMachine machine, Game game, GameTime time)
-        {
-            foreach (var node in nodes)
+        machine.SpriteBatch.End();
+    }
+
+    /// <summary>
+    ///     Called when the state should update itself and its nodes.
+    /// </summary>
+    /// <param name="time">The game time.</param>
+    public virtual void Update(StateMachine machine, Game game, GameTime time)
+    {
+        foreach (var node in nodes)
+            if (node.IsActive)
             {
-                if (node.IsActive)
+                if (node is ControlNode control)
                 {
-                    if (node is ControlNode control)
-                    {
-                        // TODO: Update input for control nodes
-                    }
-                    node.Update(new StateContext(machine, this, game), time);
+                    // TODO: Update input for control nodes
                 }
+
+                node.Update(new StateContext(machine, this, game), time);
             }
-        }
+    }
 
-        /// <summary>
-        /// Adds a node to the state.
-        /// </summary>
-        /// <param name="node">The node to add. Cannot be <see langword="null"/>.</param>
-        /// <exception cref="InvalidOperationException">Thrown if the <paramref name="node"/> is already added to this state.</exception>
-        public void AddNode(INode node)
-        {
-            ArgumentNullException.ThrowIfNull(node);
-            if (nodes.Contains(node))
-                throw new InvalidOperationException("Node is already added to this state.");
-            nodes.Add(node);
-        }
+    /// <summary>
+    ///     Adds a node to the state.
+    /// </summary>
+    /// <param name="node">The node to add. Cannot be <see langword="null" />.</param>
+    /// <exception cref="InvalidOperationException">Thrown if the <paramref name="node" /> is already added to this state.</exception>
+    public void AddNode(INode node)
+    {
+        ArgumentNullException.ThrowIfNull(node);
+        if (nodes.Contains(node))
+            throw new InvalidOperationException("Node is already added to this state.");
+        nodes.Add(node);
+    }
 
-        /// <summary>
-        /// Removes a node from the state.
-        /// </summary>
-        /// <param name="node">The node to add. Cannot be <see langword="null"/>.</param>
-        /// <exception cref="InvalidOperationException">Thrown if the <paramref name="node"/> is not in this state.</exception>
-        public void RemoveNode(INode node)
-        {
-            ArgumentNullException.ThrowIfNull(node);
-            if (!nodes.Contains(node))
-                throw new InvalidOperationException("Node is not part of this state.");
-            nodes.Remove(node);
-        }
+    /// <summary>
+    ///     Removes a node from the state.
+    /// </summary>
+    /// <param name="node">The node to add. Cannot be <see langword="null" />.</param>
+    /// <exception cref="InvalidOperationException">Thrown if the <paramref name="node" /> is not in this state.</exception>
+    public void RemoveNode(INode node)
+    {
+        ArgumentNullException.ThrowIfNull(node);
+        if (!nodes.Contains(node))
+            throw new InvalidOperationException("Node is not part of this state.");
+        nodes.Remove(node);
     }
 }

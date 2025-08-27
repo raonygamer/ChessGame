@@ -1,31 +1,25 @@
 ﻿using Core.Components;
 using Core.Nodes.Interfaces;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Core.Nodes
+namespace Core.Nodes;
+
+/// <summary>
+///     Represents a control node for UI elements.
+/// </summary>
+public class ControlNode : Node2D, IControlNode
 {
-    /// <summary>
-    /// Represents a control node for UI elements.
-    /// </summary>
-    public class ControlNode : Node2D, IControlNode
+    public ControlNode()
     {
-        /// <summary>
-        /// The RectTransform of this control node.
-        /// </summary>
-        public new RectTransform Transform => (RectTransform)base.Transform;
-
-        public bool IsMouseOver { get; set; } = false;
-        public bool IsPressed { get; set; } = false;
-
-        public ControlNode()
-        {
-            transform = new RectTransform(this);
-        }
+        transform = new RectTransform(this);
     }
+
+    /// <summary>
+    ///     The RectTransform of this control node.
+    /// </summary>
+    public new RectTransform Transform => (RectTransform)base.Transform;
+
+    /// <summary>
+    ///     Specifies whether to clip this node to the bounds of the parent node.
+    /// </summary>
+    public bool ClipsToBounds { get; set; } = false;
 }

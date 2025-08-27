@@ -1,64 +1,101 @@
-﻿using Core;
+﻿using System;
+using System.Linq;
+using Core;
 using Core.Nodes;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace States
+namespace States;
+
+public class UITestState : State
 {
-    public class UITestState : State
+    public CanvasNode Canvas = new();
+    public ImageNode MainControl = new();
+    public ImageNode Quad = new();
+    public TextNode Text = new();
+
+    public UITestState(Game game) : base(game)
     {
-        public CanvasNode Canvas = new();
-        public ImageNode MainControl = new();
+        var tex = new Texture2D(game.GraphicsDevice, 256, 256);
+        tex.SetData(Enumerable.Repeat(Color.Black, tex.Width * tex.Height).ToArray());
 
-        public UITestState(Game game)
-        {
-            var tex = new Texture2D(game.GraphicsDevice, 64, 64);
-            tex.SetData(Enumerable.Repeat(Color.Black, tex.Width * tex.Height).ToArray());
-            MainControl.Texture = tex;
-            MainControl.Transform.Parent = Canvas.Transform;
-            AddNode(Canvas);
-            AddNode(MainControl);
-        }
+        var tex2 = new Texture2D(game.GraphicsDevice, 16, 16);
+        tex2.SetData(Enumerable.Repeat(Color.Red, tex2.Width * tex2.Height).ToArray());
+        
+        var font = game.Content.Load<SpriteFont>("Fonts/vcr");
 
-        public override void OnEnter(StateMachine machine, Game game)
-        {
-            base.OnEnter(machine, game);
-        }
+        MainControl.Texture = tex;
+        MainControl.Transform.Parent = Canvas.Transform;
+        MainControl.Transform.LocalRotation = MathHelper.ToRadians(0);
 
-        public override void OnExit(StateMachine machine, Game game)
-        {
-            base.OnExit(machine, game);
-        }
+        Quad.Texture = tex2;
+        Quad.Transform.Parent = MainControl.Transform;
+        Quad.ClipsToBounds = true;
 
-        public override void Update(StateMachine machine, Game game, GameTime time)
-        {
-            const float mult = 2f;
-            var cos = Remap((float)Math.Cos(time.TotalGameTime.TotalSeconds * mult));
-            var sin = Remap((float)Math.Sin(time.TotalGameTime.TotalSeconds * mult));
-            //MainControl.Transform.Anchor = new Vector2(cos, sin);
-            //MainControl.Transform.Origin = new Vector2(cos, sin);
-            MainControl.Transform.Anchor = new Vector2(0.5f, 0.5f);
-            MainControl.Transform.Origin = new Vector2(0.5f, 0.5f);
-            base.Update(machine, game, time);
-        }
+        Text.Text = "Hello, World! This is a test of the UI system. New line here.";
+        Text.Transform.Parent = MainControl.Transform;
+        Text.Font = font;
+        Text.Transform.LocalPosition = new Vector2(10, 10);
+        Text.Transform.LocalScale = new Vector2(0.3f, 0.3f);
+        //Text.Transform.Anchor = new Vector2(0.5f, 0.5f);
+        //Text.Transform.Origin = new Vector2(0.5f, 0.5f);
+        Text.ClipsToBounds = true;
+        Text.AutoBreakLines = true;
 
-        public override void Draw(StateMachine machine, Game game, GameTime time)
-        {
-            game.GraphicsDevice.Clear(Color.CornflowerBlue);
-            base.Draw(machine, game, time);
-        }
+        AddNode(Canvas);
+        AddNode(MainControl);
+        AddNode(Quad);
+        AddNode(Text);
+    }
 
-        float Remap(float x)
-        {
-            return (x + 1f) * 0.5f;
-        }
+    public override void OnEnter(StateMachine machine, Game game)
+    {
+        base.OnEnter(machine, game);
+    }
+
+    public override void OnExit(StateMachine machine, Game game)
+    {
+        base.OnExit(machine, game);
+    }
+
+    float xVel = 1f;
+    float yVel = 1f;
+    
+    float xVel2 = 1f;
+    float yVel2 = 1f;
+    
+    public override void Update(StateMachine machine, Game game, GameTime time)
+    {
+        const float mult = 2f;
+        var cos = Remap((float)Math.Cos(time.TotalGameTime.TotalSeconds * mult));
+        var sin = (float)Math.Sin(time.TotalGameTime.TotalSeconds * mult);
+        // Quad.Transform.Anchor = new Vector2(cos, sin);
+        // Quad.Transform.Origin = new Vector2(cos, sin);
+        MainControl.Transform.AnchorPoint = new Vector2(0.5f, 0.5f + sin / 16f);
+        MainControl.Transform.Pivot = new Vector2(0.5f, 0.5f);
+        
+        Quad.Transform.AnchorPoint += new Vector2(xVel2, yVel2) * (float)time.ElapsedGameTime.TotalSeconds * 1.5f;
+        Quad.Transform.Pivot = Quad.Transform.AnchorPoint;
+        if (Quad.Transform.AnchorPoint.X >= 1f)
+            xVel2 = -1 + Random.Shared.NextSingle() / 5f;
+        if (Quad.Transform.AnchorPoint.X <= 0f)
+            xVel2 = 1 + Random.Shared.NextSingle() / 5f;
+        if (Quad.Transform.AnchorPoint.Y >= 1f)
+            yVel2 = -1 + Random.Shared.NextSingle() / 5f;
+        if (Quad.Transform.AnchorPoint.Y <= 0f)
+            yVel2 = 1 + Random.Shared.NextSingle() / 5f;
+        //MainControl.Transform.LocalRotation -= MathHelper.ToRadians((float)time.ElapsedGameTime.TotalSeconds * 20);
+        base.Update(machine, game, time);
+    }
+
+    public override void Draw(StateMachine machine, Game game, GameTime time)
+    {
+        game.GraphicsDevice.Clear(Color.CornflowerBlue);
+        base.Draw(machine, game, time);
+    }
+
+    private float Remap(float x)
+    {
+        return (x + 1f) * 0.5f;
     }
 }
