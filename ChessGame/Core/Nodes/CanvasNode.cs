@@ -5,10 +5,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Core
+namespace Core.Nodes
 {
-    public interface ISize
+    /// <summary>
+    /// Represents a canvas node for control elements.
+    /// </summary>
+    public class CanvasNode : ControlNode
     {
-        Vector2 Size { get; set; }
+
     }
 }

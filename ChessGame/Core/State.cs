@@ -1,4 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Core.Nodes;
+using Core.Nodes.Interfaces;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,11 +15,11 @@ namespace Core
     /// </summary>
     public abstract class State
     {
-        private readonly List<Node> nodes = [];
+        private readonly List<INode> nodes = [];
         /// <summary>
         /// The collection of nodes managed by this instance.
         /// </summary>
-        public IReadOnlyList<Node> Nodes => nodes;
+        public IReadOnlyList<INode> Nodes => nodes;
 
         /// <summary>
         /// Called when the state is entered.
@@ -39,7 +42,7 @@ namespace Core
         {
             foreach (var node in nodes.OfType<CanvasNode>())
             {
-                node.Size = size;
+                node.Transform.Size = size;
             }
         }
 
@@ -67,7 +70,13 @@ namespace Core
             foreach (var node in nodes)
             {
                 if (node.IsActive)
+                {
+                    if (node is ControlNode control)
+                    {
+                        // TODO: Update input for control nodes
+                    }
                     node.Update(new StateContext(machine, this, game), time);
+                }
             }
         }
 
@@ -76,7 +85,7 @@ namespace Core
         /// </summary>
         /// <param name="node">The node to add. Cannot be <see langword="null"/>.</param>
         /// <exception cref="InvalidOperationException">Thrown if the <paramref name="node"/> is already added to this state.</exception>
-        public void AddNode(Node node)
+        public void AddNode(INode node)
         {
             ArgumentNullException.ThrowIfNull(node);
             if (nodes.Contains(node))
@@ -89,7 +98,7 @@ namespace Core
         /// </summary>
         /// <param name="node">The node to add. Cannot be <see langword="null"/>.</param>
         /// <exception cref="InvalidOperationException">Thrown if the <paramref name="node"/> is not in this state.</exception>
-        public void RemoveNode(Node node)
+        public void RemoveNode(INode node)
         {
             ArgumentNullException.ThrowIfNull(node);
             if (!nodes.Contains(node))

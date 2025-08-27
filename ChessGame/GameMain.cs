@@ -37,6 +37,7 @@ namespace ChessGame
             SpriteBatch = new SpriteBatch(GraphicsDevice);
             StateMachine = new StateMachine(this, SpriteBatch);
             StateMachine.AddState("ui_test", new UITestState(this));
+            StateMachine.AddState("ui_test2", new UITestState2(this));
             StateMachine.ChangeState("ui_test");
         }
 

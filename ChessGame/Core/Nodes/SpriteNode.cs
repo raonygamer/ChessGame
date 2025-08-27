@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Core
+namespace Core.Nodes
 {
     /// <summary>
     /// Represents a basic sprite node.
@@ -43,7 +43,7 @@ namespace Core
             base.Draw(ctx, time);
             if (Texture != null)
             {
-                ctx.SpriteBatch.Draw(Texture, WorldPosition, SourceRectangle, Color, WorldRotation, new Vector2(Texture.Bounds.Width, Texture.Bounds.Height) * Transform.Origin, WorldScale, Effects, LayerDepth);
+                ctx.SpriteBatch.Draw(Texture, Transform.WorldPosition, SourceRectangle, Color, Transform.WorldRotation, new Vector2(Texture.Bounds.Width, Texture.Bounds.Height) * Transform.Origin, Transform.WorldScale, Effects, LayerDepth);
             }
         }
     }
