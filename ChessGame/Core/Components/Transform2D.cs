@@ -8,48 +8,30 @@ namespace Core.Components;
 /// <summary>
 /// Represents a basic 2D transformation.
 /// </summary>
-public class Transform2D(INode node)
+public class Transform2D
 {
     /// <summary>
     /// The node associated with this transform.
     /// </summary>
-    public readonly INode Node = node;
+    public readonly INode Node;
 
-    protected bool dirtyGlobalPosition = true;
+    #region Dirty Flags
     /// <summary>
     /// Indicates whether the global position needs to be recalculated.
     /// </summary>
-    public bool DirtyGlobalPosition
-    {
-        get => dirtyGlobalPosition;
-        set => dirtyGlobalPosition = value;
-    }
+    public bool DirtyGlobalPosition { get; set; } = true;
 
-    protected bool dirtyGlobalRotation = true;
     /// <summary>
     /// Indicates whether the global rotation needs to be recalculated.
     /// </summary>
-    public bool DirtyGlobalRotation
-    {
-        get => dirtyGlobalRotation;
-        set => dirtyGlobalRotation = value;
-    }
+    public bool DirtyGlobalRotation { get; set; } = true;
 
-    protected bool dirtyGlobalScale = true;
     /// <summary>
     /// Indicates whether the global scale needs to be recalculated.
     /// </summary>
-    public bool DirtyGlobalScale
-    {
-        get => dirtyGlobalScale;
-        set => dirtyGlobalScale = value;
-    }
-
-    /// <summary>
-    /// Indicates whether this transform is a root (has no parent).
-    /// </summary>
-    public bool IsRoot => Parent == null;
-
+    public bool DirtyGlobalScale { get; set; } = true;
+    #endregion
+    #region Hierarchy
     private Transform2D? parent;
     /// <summary>
     /// The parent transform of this transform. Can be null.
@@ -61,24 +43,10 @@ public class Transform2D(INode node)
         {
             if (value == Parent)
                 return;
-            if (value == this)
-                throw new InvalidOperationException("Node cannot be its own parent.");
-
-            var current = value;
-            while (current != null)
-            {
-                if (current == this)
-                    throw new InvalidOperationException("Cyclic parent-child relationship detected.");
-                current = current.Parent;
-            }
-
-            parent?.NotifyChildRemoved(this);
-            parent?.DetachChildFromEvents(this);
-            parent?.children.Remove(this);
+            EnsureNoCyclicParent(value);
+            RemoveThisFromParent();
             parent = value;
-            value?.children.Add(this);
-            value?.AttachChildToEvents(this);
-            value?.NotifyChildAdded(this);
+            AddThisToParent();
             MarkAllDirty();
         }
     }
@@ -88,7 +56,8 @@ public class Transform2D(INode node)
     /// The children of this transform.
     /// </summary>
     public IReadOnlyList<Transform2D> Children => children;
-
+    #endregion
+    #region Transformations
     private Vector2 position = Vector2.Zero;
     /// <summary>
     /// The local position of this transform in 2D space.
@@ -184,7 +153,8 @@ public class Transform2D(INode node)
         }
         protected set => globalScale = value;
     }
-
+    #endregion
+    #region Events
     /// <summary>
     /// Called when the position changes.
     /// Used internally for dirty flag.
@@ -241,7 +211,14 @@ public class Transform2D(INode node)
     /// Called when a child is removed from this transform.
     /// </summary>
     public event Action<Transform2D>? OnChildRemoved;
+    #endregion
 
+    public Transform2D(INode node)
+    {
+        Node = node;
+    }
+
+    #region Recalculation Methods
     /// <summary>
     /// Recalculates the global position of this transform based on the global position, rotation and scale of the parent.
     /// </summary>
@@ -291,6 +268,78 @@ public class Transform2D(INode node)
         }
         OnRecalculateGlobalScale?.Invoke(this);
     }
+    #endregion
+    #region Parent Change Handlers
+    /// <summary>
+    /// Called when the position of the parent <see cref="Transform2D"/> changes.
+    /// </summary>
+    /// <param name="parent">The parent <see cref="Transform2D"/> whose position has changed.</param>
+    protected virtual void OnParentPositionChanged(Transform2D parent)
+    {
+        DirtyGlobalPosition = true;
+    }
+
+    /// <summary>
+    /// Called when the rotation of the parent <see cref="Transform2D"/> changes.
+    /// </summary>
+    /// <param name="parent">The parent <see cref="Transform2D"/> whose rotation has changed.</param>
+    protected virtual void OnParentRotationChanged(Transform2D parent)
+    {
+        DirtyGlobalRotation = true;
+        DirtyGlobalPosition = true;
+    }
+
+    /// <summary>
+    /// Called when the scale of the parent <see cref="Transform2D"/> changes.
+    /// </summary>
+    /// <param name="parent">The parent <see cref="Transform2D"/> whose scale has changed.</param>
+    protected virtual void OnParentScaleChanged(Transform2D parent)
+    {
+        DirtyGlobalScale = true;
+        DirtyGlobalPosition = true;
+    }
+    #endregion
+    #region Utility Methods
+    /// <summary>
+    /// Ensures that setting the specified potential parent will not create a cyclic relationship.
+    /// </summary>
+    /// <param name="potentialParent"></param>
+    /// <exception cref="InvalidOperationException"></exception>
+    private void EnsureNoCyclicParent(Transform2D? potentialParent)
+    {
+        if (potentialParent is null)
+            return;
+        if (potentialParent == this)
+            throw new InvalidOperationException("Node cannot be its own parent.");
+
+        var current = potentialParent;
+        while (current != null)
+        {
+            if (current == this)
+                throw new InvalidOperationException("Cyclic parent-child relationship detected.");
+            current = current.Parent;
+        }
+    }
+
+    /// <summary>
+    /// Removes this transform from its current parent, if any.
+    /// </summary>
+    private void RemoveThisFromParent()
+    {
+        parent?.NotifyChildRemoved(this);
+        parent?.DetachChildFromEvents(this);
+        parent?.children.Remove(this);
+    }
+
+    /// <summary>
+    /// Adds this transform to its current parent, if any.
+    /// </summary>
+    private void AddThisToParent()
+    {
+        parent?.children.Add(this);
+        parent?.AttachChildToEvents(this);
+        parent?.NotifyChildAdded(this);
+    }
 
     /// <summary>
     /// Marks all the dirty flags true.
@@ -303,47 +352,8 @@ public class Transform2D(INode node)
     }
 
     /// <summary>
-    /// Called when the position of the parent <see cref="Transform2D"/> changes.
-    /// </summary>
-    /// <remarks>This method marks the global position as dirty, indicating that it needs to be recalculated.
-    /// Subclasses can override this method to perform additional actions when the parent's position changes.</remarks>
-    /// <param name="parent">The parent <see cref="Transform2D"/> whose position has changed.</param>
-    protected virtual void OnParentPositionChanged(Transform2D parent)
-    {
-        DirtyGlobalPosition = true;
-    }
-
-    /// <summary>
-    /// Called when the rotation of the parent <see cref="Transform2D"/> changes.
-    /// </summary>
-    /// <remarks>This method marks the global rotation and position as dirty, indicating that they need to be
-    /// recalculated. Override this method in a derived class to provide additional behavior when the parent's rotation
-    /// changes.</remarks>
-    /// <param name="parent">The parent <see cref="Transform2D"/> whose rotation has changed.</param>
-    protected virtual void OnParentRotationChanged(Transform2D parent)
-    {
-        DirtyGlobalRotation = true;
-        DirtyGlobalPosition = true;
-    }
-
-    /// <summary>
-    /// Called when the scale of the parent <see cref="Transform2D"/> changes.
-    /// </summary>
-    /// <remarks>This method marks the global scale and position as dirty, indicating that they need to be
-    /// recalculated. Override this method in a derived class to provide additional behavior when the parent's scale
-    /// changes.</remarks>
-    /// <param name="parent">The parent <see cref="Transform2D"/> whose scale has changed.</param>
-    protected virtual void OnParentScaleChanged(Transform2D parent)
-    {
-        DirtyGlobalScale = true;
-        DirtyGlobalPosition = true;
-    }
-
-    /// <summary>
     /// Subscribes the specified child to the parent's transformation events.
     /// </summary>
-    /// <remarks>This method ensures that the child is notified whenever the parent's position, rotation, or
-    /// scale changes.  The child must implement handlers for these events to respond appropriately.</remarks>
     /// <param name="child">The child <see cref="Transform2D"/> instance to be subscribed to the parent's position, rotation, and scale
     /// change events.</param>
     protected virtual void AttachChildToEvents(Transform2D child)
@@ -356,9 +366,6 @@ public class Transform2D(INode node)
     /// <summary>
     /// Removes the specified child from receiving notifications of parent transformation changes.
     /// </summary>
-    /// <remarks>This method detaches the child from the parent's position, rotation, and scale change events.
-    /// After calling this method, the child will no longer automatically update in response to changes in the
-    /// parent.</remarks>
     /// <param name="child">The child <see cref="Transform2D"/> to be unsubscribed from parent transformation events.</param>
     protected virtual void DetachChildFromEvents(Transform2D child)
     {
@@ -367,13 +374,22 @@ public class Transform2D(INode node)
         OnScaleChanged -= child.OnParentScaleChanged;
     }
 
+    /// <summary>
+    /// Calls the OnChildAdded event.
+    /// </summary>
+    /// <param name="child"></param>
     protected virtual void NotifyChildAdded(Transform2D child)
     {
         OnChildAdded?.Invoke(child);
     }
 
+    /// <summary>
+    /// Calls the OnChildRemoved event.
+    /// </summary>
+    /// <param name="child"></param>
     protected virtual void NotifyChildRemoved(Transform2D child)
     {
         OnChildRemoved?.Invoke(child);
     }
+    #endregion
 }

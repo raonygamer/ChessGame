@@ -52,4 +52,9 @@ public static class MathUtils
         var maxY = (int)MathF.Floor(worldCorners.Max(c => c.Y));
         return new Rectangle(minX, minY, maxX - minX, maxY - minY);
     }
+
+    public static bool Approximately(this float a, float b, float tolerance = 0.0001f)
+    {
+        return Math.Abs(a - b) <= tolerance;
+    }
 }

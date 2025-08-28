@@ -32,21 +32,24 @@ public class UITestState : State
         MainControl.Transform.AnchorMin = new Vector2(0.25f, 0.25f);
         MainControl.Transform.AnchorMax = new Vector2(0.75f, 0.75f);
         MainControl.Transform.SizeMode = SizeMode.Stretch;
+        //MainControl.Transform.PaddingMin = new Vector2(10f, 10f);
+        MainControl.Transform.PaddingMax = new Vector2(10f, 10f);
 
-        Quad.Texture = tex2;
+        Quad.Texture = tex;
         Quad.Transform.Parent = MainControl.Transform;
-        Quad.Transform.Position = new Vector2(10, 10);
+        Quad.Color = new Color(0, 0, 0, 0.5f);
         Quad.Transform.AnchorMin = new Vector2(0f, 0f);
         Quad.Transform.AnchorMax = new Vector2(1f, 1f);
+        Quad.Transform.Pivot = new Vector2(1f, 1f);
         Quad.Transform.SizeMode = SizeMode.Stretch;
 
         Text.Text = "Hello, World! This is a test of the UI system. New line here.";
-        Text.Transform.Parent = MainControl.Transform;
+        Text.Transform.Parent = Quad.Transform;
         Text.Font = font;
-        Text.Transform.Position = new Vector2(10, 10);
+        //Text.Transform.Position = new Vector2(10, 10);
         Text.Transform.Scale = new Vector2(0.3f, 0.3f);
-        //Text.Transform.Anchor = new Vector2(0.5f, 0.5f);
-        //Text.Transform.Origin = new Vector2(0.5f, 0.5f);
+        Text.Transform.AnchorMin = new Vector2(0.5f, 0.5f);
+        Text.Transform.Pivot = new Vector2(0.5f, 0.5f);
         Text.ClipsToBounds = true;
         Text.AutoBreakLines = true;
 
@@ -74,10 +77,14 @@ public class UITestState : State
     
     public override void Update(StateMachine machine, Game game, GameTime time)
     {
-        const float mult = 2f;
+        const float mult = 6f;
         var cos = Remap((float)Math.Cos(time.TotalGameTime.TotalSeconds * mult));
         var sin = Remap((float)Math.Sin(time.TotalGameTime.TotalSeconds * mult));
-        
+
+        const float margin = 10;
+        //Quad.Transform.MarginMin = new Vector2(margin * cos, margin * sin);
+        //Quad.Transform.MarginMax = new Vector2(margin * (1 - cos), margin * (1 - sin));
+
         // Quad.Transform.Anchor = new Vector2(cos, sin);
         // Quad.Transform.Origin = new Vector2(cos, sin);
         //MainControl.Transform.AnchorMin = new Vector2(0f + cos / 16f, 0f + sin / 16f);
