@@ -49,8 +49,15 @@ public class ImageNode : ControlNode
         base.Draw(ctx, time);
         if (Texture != null)
         {
-            ctx.SpriteBatch.Draw(Texture, Transform.GlobalMin, SourceRectangle, Color, Transform.GlobalRotation,
-                Transform.Pivot * new Vector2(Texture.Width, Texture.Height), Transform.GlobalScale, SpriteEffects.None,
+            ctx.SpriteBatch.Draw(
+                Texture, 
+                Transform.GlobalMin, 
+                SourceRectangle, 
+                Color, 
+                Transform.GlobalRotation,
+                Transform.Pivot * new Vector2(Texture.Width, Texture.Height), 
+                Transform.GlobalScale * (Transform.Size / new Vector2(Texture.Width, Texture.Height)), 
+                SpriteEffects.None,
                 LayerDepth);
         }
     }

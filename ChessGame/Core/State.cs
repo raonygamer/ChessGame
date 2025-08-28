@@ -20,31 +20,9 @@ public abstract class State
     /// </summary>
     public IReadOnlyList<INode> Nodes => nodes;
 
-    /// <summary>
-    /// The debug info node. This node is always on top of all other nodes.
-    /// </summary>
-    public CanvasNode DebugInfoNode = new();
-
     public State(Game game)
     {
-        DebugInfoNode.Layer = int.MaxValue;
-        var blackImage = new Texture2D(game.GraphicsDevice, 256, 256);
-        blackImage.SetData(Enumerable.Repeat(Color.Black, blackImage.Width * blackImage.Height).ToArray());
-        var debugBackground = new ImageNode
-        {
-            Texture = blackImage,
-            Color = new Color(0, 0, 0, 0.5f),
-            Transform =
-            {
-                Parent = DebugInfoNode.Transform,
-                AnchorPoint = Vector2.Zero,
-                Pivot = Vector2.Zero,
-                Position = new Vector2(10, 10),
-                Scale = new Vector2(0.3f, 0.3f)
-            }
-        };
-        AddNode(DebugInfoNode);
-        AddNode(debugBackground);
+        
     }
     
     /// <summary>
@@ -94,7 +72,7 @@ public abstract class State
                 var clipWasChanged = false;
                 if (node is ControlNode { ClipsToBounds: true } control)
                 {
-                    var rect = control.Transform.ParentRectTransform?.GlobalBounds;
+                    var rect = control.Transform.AncestorRectTransform?.GlobalBounds;
                     if (rect is not null)
                     {
                         oldClipRect = machine.SpriteBatch.GraphicsDevice.ScissorRectangle;

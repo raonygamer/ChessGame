@@ -50,17 +50,31 @@ public class RectTransform : Transform2D
         }
     }
 
-    private Vector2 anchorPoint = new(0, 0);
+    private Vector2 anchorMin = new(0, 0);
     /// <summary>
-    /// The anchor point for positioning the control node relative to its parent. (0,0) is top-left, (1,1) is bottom-right.
+    /// The anchor min for positioning the top-left relative to its parent. (0,0) is top-left, (1,1) is bottom-right.
     /// </summary>
-    public Vector2 AnchorPoint
+    public Vector2 AnchorMin
     {
-        get => anchorPoint;
+        get => anchorMin;
         set
         {
-            anchorPoint = Vector2.Clamp(value, Vector2.Zero, Vector2.One);
-            OnAnchorPointChanged?.Invoke(this);
+            anchorMin = Vector2.Clamp(value, Vector2.Zero, Vector2.One);
+            OnAnchorMinChanged?.Invoke(this);
+        }
+    }
+
+    private Vector2 anchorMax = new(0, 0);
+    /// <summary>
+    /// The anchor max for positioning the bottom-right relative to its parent. (0,0) is top-left, (1,1) is bottom-right.
+    /// </summary>
+    public Vector2 AnchorMax
+    {
+        get => anchorMax;
+        set
+        {
+            anchorMax = Vector2.Clamp(value, Vector2.Zero, Vector2.One);
+            OnAnchorMaxChanged?.Invoke(this);
         }
     }
 
@@ -78,7 +92,10 @@ public class RectTransform : Transform2D
         }
     }
 
-    public RectTransform? ParentRectTransform
+    /// <summary>
+    /// The nearest ancestor RectTransform in the hierarchy, or null if none exists.
+    /// </summary>
+    public RectTransform? AncestorRectTransform
     {
         get
         {
@@ -170,20 +187,55 @@ public class RectTransform : Transform2D
     public event Action<RectTransform>? OnSizeChanged;
 
     /// <summary>
-    /// Called when the anchor point changes.
+    /// Called when the anchor min changes.
     /// Used internally for dirty flag.
     /// External systems may also subscribe.
     /// </summary>
-    public event Action<RectTransform>? OnAnchorPointChanged = (t) =>
+    public event Action<RectTransform>? OnAnchorMinChanged = (t) =>
     {
         t.DirtyLocalMin = true;
         t.DirtyGlobalMin = true;
     };
 
     /// <summary>
+    /// Called when the anchor max changes.
+    /// Used internally for dirty flag.
+    /// External systems may also subscribe.
+    /// </summary>
+    public event Action<RectTransform>? OnAnchorMaxChanged = (t) =>
+    {
+        if (t.StretchWithAnchors)
+            t.RecalculateSizeWithAnchors();
+    };
+
+    /// <summary>
     /// Called when the pivot changes.
     /// </summary>
     public event Action<RectTransform>? OnPivotChanged;
+
+    /// <summary>
+    /// Called when the local min is recalculated.
+    /// </summary>
+    public event Action<RectTransform>? OnRecalculateMin;
+
+    /// <summary>
+    /// Called when the global min is recalculated.
+    /// </summary>
+    public event Action<RectTransform>? OnRecalculateGlobalMin;
+
+    private bool stretchWithAnchors = false;
+    /// <summary>
+    /// Whether to stretch the size with anchors.
+    /// </summary>
+    public bool StretchWithAnchors
+    {
+        get => stretchWithAnchors;
+        set
+        {
+            stretchWithAnchors = value;
+            RecalculateSizeWithAnchors();
+        }
+    }
 
     public RectTransform(IControlNode node) : base(node)
     {
@@ -196,31 +248,32 @@ public class RectTransform : Transform2D
 
     public virtual void RecalculateLocalMin()
     {
-        if (ParentRectTransform is null)
+        if (AncestorRectTransform is null)
         {
             min = Position;
         }
         else
         {
-            min = Position + ParentRectTransform.Size * AnchorPoint;
+            min = Position + AncestorRectTransform.Size * AnchorMin;
         }
+        OnRecalculateMin?.Invoke(this);
     }
 
     public virtual void RecalculateGlobalMin()
     {
-        if (ParentRectTransform is null)
+        if (AncestorRectTransform is null)
         {
             globalMin = Min;
         }
         else
         {
-            var parentGlobalMin = ParentRectTransform.GlobalMin;
+            var parentGlobalMin = AncestorRectTransform.GlobalMin;
             var rawGlobalMin = (
                 Min -
-                ParentRectTransform.Pivot *
-                ParentRectTransform.Size
-            ) * ParentRectTransform.GlobalScale;
-            var parentRotation = ParentRectTransform.GlobalRotation;
+                AncestorRectTransform.Pivot *
+                AncestorRectTransform.Size
+            ) * AncestorRectTransform.GlobalScale;
+            var parentRotation = AncestorRectTransform.GlobalRotation;
             globalMin = (
                 parentGlobalMin +
                 Vector2.Transform(
@@ -228,6 +281,15 @@ public class RectTransform : Transform2D
                     Matrix.CreateRotationZ(parentRotation)
                 )
             );
+        }
+        OnRecalculateGlobalMin?.Invoke(this);
+    }
+
+    protected virtual void RecalculateSizeWithAnchors()
+    {
+        if (StretchWithAnchors && AncestorRectTransform is not null)
+        {
+            Size = AncestorRectTransform.Size * (AnchorMax - AnchorMin);
         }
     }
 
@@ -253,15 +315,33 @@ public class RectTransform : Transform2D
     {
         DirtyLocalMin = true;
         DirtyGlobalMin = true;
+        if (StretchWithAnchors)
+            RecalculateSizeWithAnchors();
     }
 
-    protected virtual void OnParentAnchorPointChanged(RectTransform parent)
+    protected virtual void OnParentAnchorMinChanged(RectTransform parent)
+    {
+        DirtyLocalMin = true;
+        DirtyGlobalMin = true;
+    }
+
+    protected virtual void OnParentAnchorMaxChanged(RectTransform parent)
     {
         DirtyLocalMin = true;
         DirtyGlobalMin = true;
     }
 
     protected virtual void OnParentPivotChanged(RectTransform parent)
+    {
+        DirtyGlobalMin = true;
+    }
+
+    protected virtual void OnParentRecalculateMin(RectTransform parent)
+    {
+        
+    }
+
+    protected virtual void OnParentRecalculateGlobalMin(RectTransform parent)
     {
         DirtyGlobalMin = true;
     }
@@ -279,8 +359,11 @@ public class RectTransform : Transform2D
         if (child is RectTransform rectTransform)
         {
             OnSizeChanged += rectTransform.OnParentSizeChanged;
-            OnAnchorPointChanged += rectTransform.OnParentAnchorPointChanged;
+            OnAnchorMinChanged += rectTransform.OnParentAnchorMinChanged;
+            OnAnchorMaxChanged += rectTransform.OnParentAnchorMaxChanged;
             OnPivotChanged += rectTransform.OnParentPivotChanged;
+            OnRecalculateMin += rectTransform.OnParentRecalculateMin;
+            OnRecalculateGlobalMin += rectTransform.OnParentRecalculateGlobalMin;
         }
     }
 
@@ -290,8 +373,11 @@ public class RectTransform : Transform2D
         if (child is RectTransform rectTransform)
         {
             OnSizeChanged -= rectTransform.OnParentSizeChanged;
-            OnAnchorPointChanged -= rectTransform.OnParentAnchorPointChanged;
+            OnAnchorMinChanged -= rectTransform.OnParentAnchorMinChanged;
+            OnAnchorMaxChanged -= rectTransform.OnParentAnchorMaxChanged;
             OnPivotChanged -= rectTransform.OnParentPivotChanged;
+            OnRecalculateMin -= rectTransform.OnParentRecalculateMin;
+            OnRecalculateGlobalMin -= rectTransform.OnParentRecalculateGlobalMin;
         }
     }
 }

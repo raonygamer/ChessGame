@@ -72,11 +72,13 @@ public class Transform2D(INode node)
                 current = current.Parent;
             }
 
+            parent?.NotifyChildRemoved(this);
             parent?.DetachChildFromEvents(this);
             parent?.children.Remove(this);
             parent = value;
             value?.children.Add(this);
             value?.AttachChildToEvents(this);
+            value?.NotifyChildAdded(this);
             MarkAllDirty();
         }
     }
@@ -188,7 +190,8 @@ public class Transform2D(INode node)
     /// Used internally for dirty flag.
     /// External systems may also subscribe.
     /// </summary>
-    public event Action<Transform2D>? OnPositionChanged = (t) => {
+    public event Action<Transform2D>? OnPositionChanged = (t) => 
+    {
         t.DirtyGlobalPosition = true;
     };
 
@@ -197,7 +200,8 @@ public class Transform2D(INode node)
     /// Used internally for dirty flag.
     /// External systems may also subscribe.
     /// </summary>
-    public event Action<Transform2D>? OnRotationChanged = (t) => {
+    public event Action<Transform2D>? OnRotationChanged = (t) => 
+    {
         t.DirtyGlobalRotation = true;
         t.DirtyGlobalPosition = true;
     };
@@ -207,10 +211,36 @@ public class Transform2D(INode node)
     /// Used internally for dirty flag.
     /// External systems may also subscribe.
     /// </summary>
-    public event Action<Transform2D>? OnScaleChanged = (t) => {
+    public event Action<Transform2D>? OnScaleChanged = (t) => 
+    {
         t.DirtyGlobalScale = true;
         t.DirtyGlobalPosition = true;
     };
+
+    /// <summary>
+    /// Called when the global position is recalculated.
+    /// </summary>
+    public event Action<Transform2D>? OnRecalculateGlobalPosition;
+
+    /// <summary>
+    /// Called when the global rotation is recalculated.
+    /// </summary>
+    public event Action<Transform2D>? OnRecalculateGlobalRotation;
+
+    /// <summary>
+    /// Called when the global scale is recalculated.
+    /// </summary>
+    public event Action<Transform2D>? OnRecalculateGlobalScale;
+
+    /// <summary>
+    /// Called when a child is added to this transform.
+    /// </summary>
+    public event Action<Transform2D>? OnChildAdded;
+
+    /// <summary>
+    /// Called when a child is removed from this transform.
+    /// </summary>
+    public event Action<Transform2D>? OnChildRemoved;
 
     /// <summary>
     /// Recalculates the global position of this transform based on the global position, rotation and scale of the parent.
@@ -227,6 +257,7 @@ public class Transform2D(INode node)
             var rotationMatrix = Matrix.CreateRotationZ(Parent.GlobalRotation);
             GlobalPosition = Parent.GlobalPosition + Vector2.Transform(scaledLocalPos, rotationMatrix);
         }
+        OnRecalculateGlobalPosition?.Invoke(this);
     }
 
     /// <summary>
@@ -242,6 +273,7 @@ public class Transform2D(INode node)
         {
             GlobalRotation = Rotation + Parent.GlobalRotation;
         }
+        OnRecalculateGlobalRotation?.Invoke(this);
     }
 
     /// <summary>
@@ -257,6 +289,7 @@ public class Transform2D(INode node)
         {
             GlobalScale = Scale * Parent.GlobalScale;
         }
+        OnRecalculateGlobalScale?.Invoke(this);
     }
 
     /// <summary>
@@ -332,5 +365,15 @@ public class Transform2D(INode node)
         OnPositionChanged -= child.OnParentPositionChanged;
         OnRotationChanged -= child.OnParentRotationChanged;
         OnScaleChanged -= child.OnParentScaleChanged;
+    }
+
+    protected virtual void NotifyChildAdded(Transform2D child)
+    {
+        OnChildAdded?.Invoke(child);
+    }
+
+    protected virtual void NotifyChildRemoved(Transform2D child)
+    {
+        OnChildRemoved?.Invoke(child);
     }
 }

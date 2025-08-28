@@ -373,6 +373,18 @@
 /processorParam:TextureFormat=Color
 /build:Boards/lshape-2x6.png
 
+#begin Boards/rat.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Boards/rat.png
+
 #begin Boards/rect-10x8.png
 /importer:TextureImporter
 /processor:TextureProcessor

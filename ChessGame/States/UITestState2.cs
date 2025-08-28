@@ -29,32 +29,32 @@ public class UITestState2 : State
         MainControl = new ImageNode();
         MainControl.Texture = tex;
         MainControl.Transform.Parent = Canvas.Transform;
-        MainControl.Transform.AnchorPoint = Vector2.One / 2f;
+        MainControl.Transform.AnchorMin = Vector2.One / 2f;
         MainControl.Transform.Pivot = new Vector2(0.5f, 0.5f);
 
         SecondControl = new ImageNode();
         SecondControl.Texture = tex2;
         SecondControl.Transform.Parent = MainControl.Transform;
-        SecondControl.Transform.AnchorPoint = Vector2.Zero;
+        SecondControl.Transform.AnchorMin = Vector2.Zero;
         SecondControl.Transform.Pivot = new Vector2(1, 1);
 
         ThirdControl = new ImageNode();
         ThirdControl.Texture = tex2;
         ThirdControl.Transform.Parent = MainControl.Transform;
-        ThirdControl.Transform.AnchorPoint = new Vector2(1, 0);
+        ThirdControl.Transform.AnchorMin = new Vector2(1, 0);
         ThirdControl.Transform.Pivot = new Vector2(0, 1);
 
         FourthControl = new ImageNode();
         FourthControl.Texture = tex2;
         FourthControl.Transform.Parent = MainControl.Transform;
-        FourthControl.Transform.AnchorPoint = new Vector2(0, 1);
+        FourthControl.Transform.AnchorMin = new Vector2(0, 1);
         FourthControl.Transform.Pivot = new Vector2(1, 0);
 
         FifthControl = new ImageNode();
         FifthControl.Texture = tex2;
         FifthControl.Transform.Parent = MainControl.Transform;
         FifthControl.Transform.Position = FifthControl.Transform.Size / 2f;
-        FifthControl.Transform.AnchorPoint = new Vector2(1, 1);
+        FifthControl.Transform.AnchorMin = new Vector2(1, 1);
         FifthControl.Transform.Pivot = new Vector2(0.5f, 0.5f);
 
         AddNode(Canvas);

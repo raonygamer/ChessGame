@@ -27,6 +27,10 @@ public class UITestState : State
         MainControl.Texture = tex;
         MainControl.Transform.Parent = Canvas.Transform;
         MainControl.Transform.Rotation = MathHelper.ToRadians(0);
+        MainControl.Color = new Color(0, 0, 0, 0.5f);
+        MainControl.Transform.AnchorMin = new Vector2(0.1f, 0.1f);
+        MainControl.Transform.AnchorMax = new Vector2(0.9f, 0.9f);
+        MainControl.Transform.StretchWithAnchors = false;
 
         Quad.Texture = tex2;
         Quad.Transform.Parent = MainControl.Transform;
@@ -71,19 +75,18 @@ public class UITestState : State
         var sin = (float)Math.Sin(time.TotalGameTime.TotalSeconds * mult);
         // Quad.Transform.Anchor = new Vector2(cos, sin);
         // Quad.Transform.Origin = new Vector2(cos, sin);
-        MainControl.Transform.AnchorPoint = new Vector2(0.5f, 0.5f + sin / 16f);
-        MainControl.Transform.Pivot = new Vector2(0.5f, 0.5f);
-        
-        Quad.Transform.AnchorPoint += new Vector2(xVel2, yVel2) * (float)time.ElapsedGameTime.TotalSeconds * 1.5f;
-        Quad.Transform.Pivot = Quad.Transform.AnchorPoint;
-        if (Quad.Transform.AnchorPoint.X >= 1f)
-            xVel2 = -1 + Random.Shared.NextSingle() / 5f;
-        if (Quad.Transform.AnchorPoint.X <= 0f)
-            xVel2 = 1 + Random.Shared.NextSingle() / 5f;
-        if (Quad.Transform.AnchorPoint.Y >= 1f)
-            yVel2 = -1 + Random.Shared.NextSingle() / 5f;
-        if (Quad.Transform.AnchorPoint.Y <= 0f)
-            yVel2 = 1 + Random.Shared.NextSingle() / 5f;
+        //MainControl.Transform.AnchorMin = new Vector2(0.5f, 0.5f + sin / 16f);
+        //MainControl.Transform.Pivot = new Vector2(0.5f, 0.5f);
+        //Quad.Transform.AnchorMin += new Vector2(xVel2, yVel2) * (float)time.ElapsedGameTime.TotalSeconds * 1.5f;
+        //Quad.Transform.Pivot = Quad.Transform.AnchorMin;
+        //if (Quad.Transform.AnchorMin.X >= 1f)
+        //    xVel2 = -1 + Random.Shared.NextSingle() / 5f;
+        //if (Quad.Transform.AnchorMin.X <= 0f)
+        //    xVel2 = 1 + Random.Shared.NextSingle() / 5f;
+        //if (Quad.Transform.AnchorMin.Y >= 1f)
+        //    yVel2 = -1 + Random.Shared.NextSingle() / 5f;
+        //if (Quad.Transform.AnchorMin.Y <= 0f)
+        //    yVel2 = 1 + Random.Shared.NextSingle() / 5f;
         //MainControl.Transform.LocalRotation -= MathHelper.ToRadians((float)time.ElapsedGameTime.TotalSeconds * 20);
         base.Update(machine, game, time);
     }
