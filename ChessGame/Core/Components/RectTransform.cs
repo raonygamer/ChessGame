@@ -42,7 +42,16 @@ public class RectTransform : Transform2D
     /// </summary>
     public Vector2 Size
     {
-        get => size;
+        get
+        {
+            if (AncestorRectTransform is null)
+                return size;
+            return (
+                size -
+                new Vector2(Margin.Width, Margin.Height) * 2f -
+                new Vector2(AncestorRectTransform.Padding.Width, AncestorRectTransform.Padding.Height) * 2f
+            );
+        }
         set
         {
             size = value;
@@ -89,6 +98,34 @@ public class RectTransform : Transform2D
         {
             pivot = Vector2.Clamp(value, Vector2.Zero, Vector2.One);
             OnPivotChanged?.Invoke(this);
+        }
+    }
+
+    private Rectangle padding;
+    /// <summary>
+    /// The padding of this rect transform.
+    /// </summary>
+    public Rectangle Padding
+    {
+        get => padding;
+        set
+        {
+            padding = value;
+            OnPaddingChanged?.Invoke(this);
+        }
+    }
+
+    private Rectangle margin;
+    /// <summary>
+    /// The margin of this rect transform.
+    /// </summary>
+    public Rectangle Margin
+    {
+        get => margin;
+        set
+        {
+            margin = value;
+            OnMarginChanged?.Invoke(this);
         }
     }
 
@@ -209,6 +246,22 @@ public class RectTransform : Transform2D
     };
 
     /// <summary>
+    /// Called when the padding changes.
+    /// </summary>
+    public event Action<RectTransform>? OnPaddingChanged;
+
+    /// <summary>
+    /// Called when the margin changes.
+    /// Used internally for dirty flag.
+    /// External systems may also subscribe.
+    /// </summary>
+    public event Action<RectTransform>? OnMarginChanged = (t) =>
+    {
+        t.DirtyLocalMin = true;
+        t.DirtyGlobalMin = true;
+    };
+
+    /// <summary>
     /// Called when the pivot changes.
     /// </summary>
     public event Action<RectTransform>? OnPivotChanged;
@@ -254,7 +307,13 @@ public class RectTransform : Transform2D
         }
         else
         {
-            min = Position + AncestorRectTransform.Size * AnchorMin;
+            min = (
+                Position + 
+                AncestorRectTransform.Size * 
+                AnchorMin + 
+                new Vector2(Margin.X, Margin.Y) +
+                new Vector2(AncestorRectTransform.Padding.X, AncestorRectTransform.Padding.Y)
+            );
         }
         OnRecalculateMin?.Invoke(this);
     }
@@ -336,6 +395,17 @@ public class RectTransform : Transform2D
         DirtyGlobalMin = true;
     }
 
+    protected virtual void OnParentPaddingChanged(RectTransform parent)
+    {
+        DirtyLocalMin = true;
+        DirtyGlobalMin = true;
+    }
+
+    protected virtual void OnParentMarginChanged(RectTransform parent)
+    {
+
+    }
+
     protected virtual void OnParentRecalculateMin(RectTransform parent)
     {
         
@@ -362,6 +432,8 @@ public class RectTransform : Transform2D
             OnAnchorMinChanged += rectTransform.OnParentAnchorMinChanged;
             OnAnchorMaxChanged += rectTransform.OnParentAnchorMaxChanged;
             OnPivotChanged += rectTransform.OnParentPivotChanged;
+            OnPaddingChanged += rectTransform.OnParentPaddingChanged;
+            OnMarginChanged += rectTransform.OnParentMarginChanged;
             OnRecalculateMin += rectTransform.OnParentRecalculateMin;
             OnRecalculateGlobalMin += rectTransform.OnParentRecalculateGlobalMin;
         }
@@ -376,6 +448,8 @@ public class RectTransform : Transform2D
             OnAnchorMinChanged -= rectTransform.OnParentAnchorMinChanged;
             OnAnchorMaxChanged -= rectTransform.OnParentAnchorMaxChanged;
             OnPivotChanged -= rectTransform.OnParentPivotChanged;
+            OnPaddingChanged -= rectTransform.OnParentPaddingChanged;
+            OnMarginChanged -= rectTransform.OnParentMarginChanged;
             OnRecalculateMin -= rectTransform.OnParentRecalculateMin;
             OnRecalculateGlobalMin -= rectTransform.OnParentRecalculateGlobalMin;
         }
