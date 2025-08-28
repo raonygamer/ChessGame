@@ -199,7 +199,10 @@ public class RectTransform : Transform2D
     /// <summary>
     /// The sizing mode of this RectTransform.
     /// </summary>
-    public SizeMode SizeMode { get; set; } = SizeMode.Fixed;
+    public SizeMode2D SizeMode { get; set; } = new SizeMode2D { 
+        X = Components.SizeMode.Fixed,
+        Y = Components.SizeMode.Fixed
+    };
     #endregion
     #region Events
     /// <summary>
@@ -299,10 +302,10 @@ public class RectTransform : Transform2D
     /// <summary>
     /// The final size of the rectangle, depending on the sizing mode.
     /// </summary>
-    public Vector2 FinalSize
-    {
-        get => SizeMode == SizeMode.Fixed ? Size : StretchSize;
-    }
+    public Vector2 FinalSize => new(
+        SizeMode.X == Components.SizeMode.Fixed ? Size.X : StretchSize.X,
+        SizeMode.Y == Components.SizeMode.Fixed ? Size.Y : StretchSize.Y
+    );
 
     /// <summary>
     /// The bottom-right position of this RectTransform in local coordinates.
@@ -347,6 +350,19 @@ public class RectTransform : Transform2D
         OnPositionChanged += (t) =>
         {
             DirtyLocalMin = true;
+            DirtyGlobalMin = true;
+        };
+
+        OnRotationChanged += (t) =>
+        {
+            DirtyLocalMin = true;
+            DirtyGlobalMin = true;
+        };
+
+        OnScaleChanged += (t) =>
+        {
+            DirtyLocalMin = true;
+            DirtyGlobalMin = true;
         };
     }
 

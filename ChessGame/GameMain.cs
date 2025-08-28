@@ -19,7 +19,7 @@ public class GameMain : Game
     public GameMain()
     {
         Graphics = new GraphicsDeviceManager(this);
-        Graphics.SynchronizeWithVerticalRetrace = false;
+        Graphics.SynchronizeWithVerticalRetrace = true;
         Graphics.ApplyChanges();
         Content.RootDirectory = "Content";
         IsFixedTimeStep = false;

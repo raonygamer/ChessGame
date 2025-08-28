@@ -1,10 +1,11 @@
-﻿using System;
-using System.Linq;
-using Core;
+﻿using Core;
 using Core.Components;
 using Core.Nodes.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Linq;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace States;
 
@@ -29,10 +30,14 @@ public class UITestState : State
         MainControl.Transform.Parent = Canvas.Transform;
         MainControl.Transform.Rotation = MathHelper.ToRadians(0);
         MainControl.Color = new Color(0, 0, 0, 0.5f);
-        MainControl.Transform.AnchorMin = new Vector2(0.25f, 0.25f);
-        MainControl.Transform.AnchorMax = new Vector2(0.75f, 0.75f);
-        MainControl.Transform.SizeMode = SizeMode.Stretch;
-        //MainControl.Transform.PaddingMin = new Vector2(10f, 10f);
+        MainControl.Transform.AnchorMin = new Vector2(0, 0);
+        MainControl.Transform.AnchorMax = new Vector2(1, 1);
+        MainControl.Transform.SizeMode = new SizeMode2D
+        {
+            X = SizeMode.Stretch,
+            Y = SizeMode.Stretch
+        };
+        MainControl.Transform.PaddingMin = new Vector2(10f, 10f);
         MainControl.Transform.PaddingMax = new Vector2(10f, 10f);
 
         Quad.Texture = tex;
@@ -40,16 +45,20 @@ public class UITestState : State
         Quad.Color = new Color(0, 0, 0, 0.5f);
         Quad.Transform.AnchorMin = new Vector2(0f, 0f);
         Quad.Transform.AnchorMax = new Vector2(1f, 1f);
-        Quad.Transform.Pivot = new Vector2(1f, 1f);
-        Quad.Transform.SizeMode = SizeMode.Stretch;
+        Quad.Transform.PaddingMin = new Vector2(5f, 5f);
+        Quad.Transform.PaddingMax = new Vector2(5f, 5f);
+        Quad.Transform.SizeMode = new SizeMode2D
+        {
+            X = SizeMode.Fixed,
+            Y = SizeMode.Stretch
+        };
 
-        Text.Text = "Hello, World! This is a test of the UI system. New line here.";
+        Text.Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
         Text.Transform.Parent = Quad.Transform;
         Text.Font = font;
-        //Text.Transform.Position = new Vector2(10, 10);
-        Text.Transform.Scale = new Vector2(0.3f, 0.3f);
-        Text.Transform.AnchorMin = new Vector2(0.5f, 0.5f);
-        Text.Transform.Pivot = new Vector2(0.5f, 0.5f);
+        Text.Transform.Scale = new Vector2(0.2f, 0.2f);
+        Text.Transform.AnchorMin = new Vector2(0f, 0f);
+        Text.Transform.Pivot = new Vector2(0f, 0f);
         Text.ClipsToBounds = true;
         Text.AutoBreakLines = true;
 
