@@ -4,7 +4,7 @@ using Core.Nodes.Interfaces;
 namespace Core.Nodes;
 
 /// <summary>
-///     Represents a control node for UI elements.
+/// Represents a control node for UI elements.
 /// </summary>
 public class ControlNode : Node2D, IControlNode
 {
@@ -14,12 +14,12 @@ public class ControlNode : Node2D, IControlNode
     }
 
     /// <summary>
-    ///     The RectTransform of this control node.
+    /// The RectTransform of this control node.
     /// </summary>
     public new RectTransform Transform => (RectTransform)base.Transform;
 
     /// <summary>
-    ///     Specifies whether to clip this node to the bounds of the parent node.
+    /// Specifies whether to clip this node to the bounds of the parent node.
     /// </summary>
     public bool ClipsToBounds { get; set; } = false;
 }

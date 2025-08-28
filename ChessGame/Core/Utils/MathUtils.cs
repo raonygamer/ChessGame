@@ -4,8 +4,18 @@ using Microsoft.Xna.Framework;
 
 namespace Core.Utils;
 
+/// <summary>
+/// Contains some useful math utility functions.
+/// </summary>
 public static class MathUtils
 {
+    /// <summary>
+    /// Rescales and rotates a rectangle around its center, returning the axis-aligned bounding box that contains the transformed rectangle.
+    /// </summary>
+    /// <param name="rect">The rectangle to transform.</param>
+    /// <param name="scale">The new scale.</param>
+    /// <param name="angle">The new rotation.</param>
+    /// <returns></returns>
     public static Rectangle ScaleAndRotateRect(this Rectangle rect, Vector2 scale, float angle)
     {
         var center = rect.Center.ToVector2();

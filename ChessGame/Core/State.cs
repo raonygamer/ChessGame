@@ -9,19 +9,19 @@ using Microsoft.Xna.Framework.Graphics;
 namespace Core;
 
 /// <summary>
-///     Represents a basic state.
+/// Represents a basic state.
 /// </summary>
 public abstract class State
 {
     private readonly List<INode> nodes = [];
 
     /// <summary>
-    ///     The collection of nodes managed by this instance.
+    /// The collection of nodes managed by this instance.
     /// </summary>
     public IReadOnlyList<INode> Nodes => nodes;
 
     /// <summary>
-    ///     The debug info node. This node is always on top of all other nodes.
+    /// The debug info node. This node is always on top of all other nodes.
     /// </summary>
     public CanvasNode DebugInfoNode = new();
 
@@ -39,8 +39,8 @@ public abstract class State
                 Parent = DebugInfoNode.Transform,
                 AnchorPoint = Vector2.Zero,
                 Pivot = Vector2.Zero,
-                LocalPosition = new Vector2(10, 10),
-                LocalScale = new Vector2(0.3f, 0.3f)
+                Position = new Vector2(10, 10),
+                Scale = new Vector2(0.3f, 0.3f)
             }
         };
         AddNode(DebugInfoNode);
@@ -48,7 +48,7 @@ public abstract class State
     }
     
     /// <summary>
-    ///     Called when the state is entered.
+    /// Called when the state is entered.
     /// </summary>
     public virtual void OnEnter(StateMachine machine, Game game)
     {
@@ -56,14 +56,14 @@ public abstract class State
     }
 
     /// <summary>
-    ///     Called when the state is exited.
+    /// Called when the state is exited.
     /// </summary>
     public virtual void OnExit(StateMachine machine, Game game)
     {
     }
 
     /// <summary>
-    ///     Called when the game window is resized.
+    /// Called when the game window is resized.
     /// </summary>
     /// <param name="size">The new game window size.</param>
     public virtual void OnResize(Vector2 size)
@@ -72,7 +72,7 @@ public abstract class State
     }
 
     /// <summary>
-    ///     Called when the state should draw itself and its nodes.
+    /// Called when the state should draw itself and its nodes.
     /// </summary>
     /// <param name="time">The game time.</param>
     public virtual void Draw(StateMachine machine, Game game, GameTime time)
@@ -85,16 +85,34 @@ public abstract class State
                 ScissorTestEnable = true
             }
         );
-        
+
         foreach (var node in nodes.OrderBy(c => c.Layer))
+        {
             if (node.IsActive)
+            {
+                var oldClipRect = Rectangle.Empty;
+                var clipWasChanged = false;
+                if (node is ControlNode { ClipsToBounds: true } control)
+                {
+                    var rect = control.Transform.ParentRectTransform?.GlobalBounds;
+                    if (rect is not null)
+                    {
+                        oldClipRect = machine.SpriteBatch.GraphicsDevice.ScissorRectangle;
+                        machine.SpriteBatch.GraphicsDevice.ScissorRectangle = rect.Value;
+                        clipWasChanged = true;
+                    }
+                }
                 node.Draw(new StateContext(machine, this, game), time);
+                if (clipWasChanged)
+                    machine.SpriteBatch.GraphicsDevice.ScissorRectangle = oldClipRect;
+            }
+        }
 
         machine.SpriteBatch.End();
     }
 
     /// <summary>
-    ///     Called when the state should update itself and its nodes.
+    /// Called when the state should update itself and its nodes.
     /// </summary>
     /// <param name="time">The game time.</param>
     public virtual void Update(StateMachine machine, Game game, GameTime time)
@@ -112,7 +130,7 @@ public abstract class State
     }
 
     /// <summary>
-    ///     Adds a node to the state.
+    /// Adds a node to the state.
     /// </summary>
     /// <param name="node">The node to add. Cannot be <see langword="null" />.</param>
     /// <exception cref="InvalidOperationException">Thrown if the <paramref name="node" /> is already added to this state.</exception>
@@ -125,7 +143,7 @@ public abstract class State
     }
 
     /// <summary>
-    ///     Removes a node from the state.
+    /// Removes a node from the state.
     /// </summary>
     /// <param name="node">The node to add. Cannot be <see langword="null" />.</param>
     /// <exception cref="InvalidOperationException">Thrown if the <paramref name="node" /> is not in this state.</exception>

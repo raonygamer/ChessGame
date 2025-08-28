@@ -26,7 +26,7 @@ public class UITestState : State
 
         MainControl.Texture = tex;
         MainControl.Transform.Parent = Canvas.Transform;
-        MainControl.Transform.LocalRotation = MathHelper.ToRadians(0);
+        MainControl.Transform.Rotation = MathHelper.ToRadians(0);
 
         Quad.Texture = tex2;
         Quad.Transform.Parent = MainControl.Transform;
@@ -35,8 +35,8 @@ public class UITestState : State
         Text.Text = "Hello, World! This is a test of the UI system. New line here.";
         Text.Transform.Parent = MainControl.Transform;
         Text.Font = font;
-        Text.Transform.LocalPosition = new Vector2(10, 10);
-        Text.Transform.LocalScale = new Vector2(0.3f, 0.3f);
+        Text.Transform.Position = new Vector2(10, 10);
+        Text.Transform.Scale = new Vector2(0.3f, 0.3f);
         //Text.Transform.Anchor = new Vector2(0.5f, 0.5f);
         //Text.Transform.Origin = new Vector2(0.5f, 0.5f);
         Text.ClipsToBounds = true;

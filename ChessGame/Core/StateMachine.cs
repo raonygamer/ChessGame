@@ -6,34 +6,34 @@ using Microsoft.Xna.Framework.Graphics;
 namespace Core;
 
 /// <summary>
-///     Represents a basic state machine.
+/// Represents a basic state machine.
 /// </summary>
 public class StateMachine(Game game, SpriteBatch spriteBatch)
 {
     /// <summary>
-    ///     The game instance associated with this state machine.
+    /// The game instance associated with this state machine.
     /// </summary>
     public readonly Game Game = game;
 
     /// <summary>
-    ///     The sprite batch used for rendering.
+    /// The sprite batch used for rendering.
     /// </summary>
     public readonly SpriteBatch SpriteBatch = spriteBatch;
 
     private readonly Dictionary<string, State> states = [];
 
     /// <summary>
-    ///     The collection of states managed by this instance.
+    /// The collection of states managed by this instance.
     /// </summary>
     public IReadOnlyDictionary<string, State> States => states;
 
     /// <summary>
-    ///     The current active state or null if there is no active state.
+    /// The current active state or null if there is no active state.
     /// </summary>
     public (string Name, State State)? Current { get; private set; }
 
     /// <summary>
-    ///     Adds a state to the state machine.
+    /// Adds a state to the state machine.
     /// </summary>
     /// <param name="name">Name of the state to add.</param>
     /// <param name="state">The state to add.</param>
@@ -48,7 +48,7 @@ public class StateMachine(Game game, SpriteBatch spriteBatch)
     }
 
     /// <summary>
-    ///     Removes a state from the state machine.
+    /// Removes a state from the state machine.
     /// </summary>
     /// <param name="name">Name of the state to remove.</param>
     public void RemoveState(string name)
@@ -62,7 +62,7 @@ public class StateMachine(Game game, SpriteBatch spriteBatch)
     }
 
     /// <summary>
-    ///     Changes the current state to the state with the given name.
+    /// Changes the current state to the state with the given name.
     /// </summary>
     /// <param name="name">Name of the state to change to.</param>
     /// <exception cref="InvalidOperationException">State not found.</exception>

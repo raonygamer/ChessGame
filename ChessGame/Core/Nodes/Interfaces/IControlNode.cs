@@ -2,7 +2,7 @@
 
 namespace Core.Nodes.Interfaces;
 
-public interface IControlNode
+public interface IControlNode : INode
 {
     RectTransform Transform { get; }
     bool ClipsToBounds { get; set; }

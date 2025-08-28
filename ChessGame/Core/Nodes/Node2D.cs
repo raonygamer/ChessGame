@@ -5,14 +5,14 @@ using Microsoft.Xna.Framework;
 namespace Core.Nodes;
 
 /// <summary>
-///     Represents a 2D node with position, rotation, scale and origin.
+/// Represents a 2D node with position, rotation, scale and origin.
 /// </summary>
 public class Node2D : INode
 {
     protected Transform2D transform;
 
     /// <summary>
-    ///     Constructs a new <see cref="Node2D" /> object with a <see cref="Transform2D" />.
+    /// Constructs a new <see cref="Node2D" /> object with a <see cref="Transform2D" />.
     /// </summary>
     public Node2D()
     {
@@ -20,7 +20,7 @@ public class Node2D : INode
     }
 
     /// <summary>
-    ///     The 2D transform of this node.
+    /// The 2D transform of this node.
     /// </summary>
     public Transform2D Transform => transform;
 

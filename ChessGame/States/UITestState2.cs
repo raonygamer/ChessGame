@@ -14,7 +14,6 @@ public class UITestState2 : State
     public ImageNode FourthControl;
     public ImageNode MainControl;
     public ImageNode SecondControl;
-    public SpriteNode Sprite;
     public ImageNode ThirdControl;
 
     public UITestState2(Game game) : base(game)
@@ -54,25 +53,16 @@ public class UITestState2 : State
         FifthControl = new ImageNode();
         FifthControl.Texture = tex2;
         FifthControl.Transform.Parent = MainControl.Transform;
-        FifthControl.Transform.LocalPosition = FifthControl.Transform.Size / 2f;
+        FifthControl.Transform.Position = FifthControl.Transform.Size / 2f;
         FifthControl.Transform.AnchorPoint = new Vector2(1, 1);
         FifthControl.Transform.Pivot = new Vector2(0.5f, 0.5f);
 
-        Sprite = new SpriteNode
-        {
-            Texture = tex2,
-            Color = Color.Green,
-            LayerDepth = 0.5f
-        };
-        Sprite.Transform.LocalScale = new Vector2(0.1f, 0.1f);
-        Sprite.Transform.Pivot = new Vector2(0.5f, 0.5f);
         AddNode(Canvas);
         AddNode(MainControl);
         AddNode(SecondControl);
         AddNode(ThirdControl);
         AddNode(FourthControl);
         AddNode(FifthControl);
-        AddNode(Sprite);
     }
 
     public override void OnEnter(StateMachine machine, Game game)
@@ -89,16 +79,16 @@ public class UITestState2 : State
     {
         var halfWidth = game.Window.ClientBounds.Width / 2;
         var halfHeight = game.Window.ClientBounds.Height / 2;
-        MainControl.Transform.LocalPosition = new Vector2((float)Math.Cos(time.TotalGameTime.TotalSeconds * 5) * 64f,
+        MainControl.Transform.Position = new Vector2((float)Math.Cos(time.TotalGameTime.TotalSeconds * 5) * 64f,
             (float)Math.Sin(time.TotalGameTime.TotalSeconds * 5) * 64f);
-        MainControl.Transform.LocalRotation = MathHelper.ToRadians((float)time.TotalGameTime.TotalSeconds * 20);
-        SecondControl.Transform.LocalPosition = new Vector2((float)Math.Cos(time.TotalGameTime.TotalSeconds * 15) * 16f,
+        MainControl.Transform.Rotation = MathHelper.ToRadians((float)time.TotalGameTime.TotalSeconds * 20);
+        SecondControl.Transform.Position = new Vector2((float)Math.Cos(time.TotalGameTime.TotalSeconds * 15) * 16f,
             (float)Math.Sin(time.TotalGameTime.TotalSeconds * 15) * 16f);
-        ThirdControl.Transform.LocalPosition =
+        ThirdControl.Transform.Position =
             new Vector2(0, (float)Math.Sin(time.TotalGameTime.TotalSeconds * 15) * 16f);
-        FourthControl.Transform.LocalPosition =
+        FourthControl.Transform.Position =
             new Vector2((float)Math.Cos(time.TotalGameTime.TotalSeconds * 15) * 16f, 0);
-        FifthControl.Transform.LocalRotation = MathHelper.ToRadians((float)-time.TotalGameTime.TotalSeconds * 40);
+        FifthControl.Transform.Rotation = MathHelper.ToRadians((float)-time.TotalGameTime.TotalSeconds * 40);
         base.Update(machine, game, time);
     }
 
