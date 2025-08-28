@@ -36,28 +36,60 @@ public class RectTransform : Transform2D
         set => dirtyGlobalMin = value;
     }
 
+    protected bool dirtyStretchSize = true;
+    /// <summary>
+    /// Indicates whether the stretch size needs to be recalculated.
+    /// </summary>
+    public bool DirtyStretchSize
+    {
+        get => dirtyStretchSize;
+        set => dirtyStretchSize = value;
+    }
+
     private Vector2 size = Vector2.Zero;
     /// <summary>
     /// The size of the rectangle.
     /// </summary>
     public Vector2 Size
     {
-        get
-        {
-            if (AncestorRectTransform is null)
-                return size;
-            return (
-                size -
-                new Vector2(Margin.Width, Margin.Height) * 2f -
-                new Vector2(AncestorRectTransform.Padding.Width, AncestorRectTransform.Padding.Height) * 2f
-            );
-        }
+        get => size;
         set
         {
             size = value;
             OnSizeChanged?.Invoke(this);
         }
     }
+
+    private Vector2 stretchSize = Vector2.Zero;
+    /// <summary>
+    /// The size of the rectangle when in stretch mode.
+    /// </summary>
+    public Vector2 StretchSize
+    {
+        get
+        {
+            if (DirtyStretchSize)
+            {
+                RecalculateStretchSize();
+                DirtyStretchSize = false;
+            }
+            return stretchSize;
+        }
+        protected set => stretchSize = value;
+    }
+
+    /// <summary>
+    /// The final size of the rectangle, depending on the sizing mode.
+    /// </summary>
+    public Vector2 FinalSize
+    {
+        get => SizeMode == SizeMode.Fixed ? Size : StretchSize;
+    }
+
+    /// <summary>
+    /// The sizing mode of this RectTransform.
+    /// </summary>
+    public SizeMode SizeMode { get; set; } = SizeMode.Fixed;
 
     private Vector2 anchorMin = new(0, 0);
     /// <summary>
@@ -68,7 +100,7 @@ public class RectTransform : Transform2D
         get => anchorMin;
         set
         {
-            anchorMin = Vector2.Clamp(value, Vector2.Zero, Vector2.One);
+            anchorMin = value;
             OnAnchorMinChanged?.Invoke(this);
         }
     }
@@ -82,7 +114,7 @@ public class RectTransform : Transform2D
         get => anchorMax;
         set
         {
-            anchorMax = Vector2.Clamp(value, Vector2.Zero, Vector2.One);
+            anchorMax = value;
             OnAnchorMaxChanged?.Invoke(this);
         }
     }
@@ -98,34 +130,6 @@ public class RectTransform : Transform2D
         {
             pivot = Vector2.Clamp(value, Vector2.Zero, Vector2.One);
             OnPivotChanged?.Invoke(this);
-        }
-    }
-
-    private Rectangle padding;
-    /// <summary>
-    /// The padding of this rect transform.
-    /// </summary>
-    public Rectangle Padding
-    {
-        get => padding;
-        set
-        {
-            padding = value;
-            OnPaddingChanged?.Invoke(this);
-        }
-    }
-
-    private Rectangle margin;
-    /// <summary>
-    /// The margin of this rect transform.
-    /// </summary>
-    public Rectangle Margin
-    {
-        get => margin;
-        set
-        {
-            margin = value;
-            OnMarginChanged?.Invoke(this);
         }
     }
 
@@ -185,22 +189,22 @@ public class RectTransform : Transform2D
     /// <summary>
     /// The bottom-right position of this RectTransform in local coordinates.
     /// </summary>
-    public Vector2 Max => Min + Size;
+    public Vector2 Max => Min + FinalSize;
 
     /// <summary>
     /// The bottom-right position of this RectTransform in world coordinates.
     /// </summary>
-    public Vector2 GlobalMax => GlobalMin + Size;
+    public Vector2 GlobalMax => GlobalMin + FinalSize;
 
     /// <summary>
     /// The rectangle representing this RectTransform in local coordinates.
     /// </summary>
-    public Rectangle Rect => new(Min.ToPoint() - (Size * Pivot).ToPoint(), Size.ToPoint());
+    public Rectangle Rect => new(Min.ToPoint() - (FinalSize * Pivot).ToPoint(), FinalSize.ToPoint());
 
     /// <summary>
     /// The rectangle representing this RectTransform in world coordinates.
     /// </summary>
-    public Rectangle GlobalRect => new(GlobalMin.ToPoint() - (Size * Pivot).ToPoint(), Size.ToPoint());
+    public Rectangle GlobalRect => new(GlobalMin.ToPoint() - (FinalSize * Pivot).ToPoint(), FinalSize.ToPoint());
 
     /// <summary>
     /// The rectangle representing this RectTransform in world coordinates, scaled and rotated by the world scale and
@@ -211,12 +215,12 @@ public class RectTransform : Transform2D
     /// <summary>
     /// The center position of this RectTransform in local coordinates.
     /// </summary>
-    public Vector2 Center => Min + Size * 0.5f;
+    public Vector2 Center => Min + FinalSize * 0.5f;
 
     /// <summary>
     /// The center position of this RectTransform in world coordinates.
     /// </summary>
-    public Vector2 GlobalCenter => GlobalMin + Size * 0.5f;
+    public Vector2 GlobalCenter => GlobalMin + FinalSize * 0.5f;
 
     /// <summary>
     /// Called when the size changes.
@@ -232,6 +236,7 @@ public class RectTransform : Transform2D
     {
         t.DirtyLocalMin = true;
         t.DirtyGlobalMin = true;
+        t.DirtyStretchSize = true;
     };
 
     /// <summary>
@@ -241,24 +246,7 @@ public class RectTransform : Transform2D
     /// </summary>
     public event Action<RectTransform>? OnAnchorMaxChanged = (t) =>
     {
-        if (t.StretchWithAnchors)
-            t.RecalculateSizeWithAnchors();
-    };
-
-    /// <summary>
-    /// Called when the padding changes.
-    /// </summary>
-    public event Action<RectTransform>? OnPaddingChanged;
-
-    /// <summary>
-    /// Called when the margin changes.
-    /// Used internally for dirty flag.
-    /// External systems may also subscribe.
-    /// </summary>
-    public event Action<RectTransform>? OnMarginChanged = (t) =>
-    {
-        t.DirtyLocalMin = true;
-        t.DirtyGlobalMin = true;
+        t.DirtyStretchSize = true;
     };
 
     /// <summary>
@@ -276,19 +264,10 @@ public class RectTransform : Transform2D
     /// </summary>
     public event Action<RectTransform>? OnRecalculateGlobalMin;
 
-    private bool stretchWithAnchors = false;
     /// <summary>
-    /// Whether to stretch the size with anchors.
+    /// Called when the stretch size is recalculated.
     /// </summary>
-    public bool StretchWithAnchors
-    {
-        get => stretchWithAnchors;
-        set
-        {
-            stretchWithAnchors = value;
-            RecalculateSizeWithAnchors();
-        }
-    }
+    public event Action<RectTransform>? OnRecalculateStretchSize;
 
     public RectTransform(IControlNode node) : base(node)
     {
@@ -299,6 +278,9 @@ public class RectTransform : Transform2D
         };
     }
 
+    /// <summary>
+    /// Recalculates the local min based on the position and anchors.
+    /// </summary>
     public virtual void RecalculateLocalMin()
     {
         if (AncestorRectTransform is null)
@@ -309,15 +291,16 @@ public class RectTransform : Transform2D
         {
             min = (
                 Position + 
-                AncestorRectTransform.Size * 
-                AnchorMin + 
-                new Vector2(Margin.X, Margin.Y) +
-                new Vector2(AncestorRectTransform.Padding.X, AncestorRectTransform.Padding.Y)
+                AncestorRectTransform.FinalSize * 
+                AnchorMin
             );
         }
         OnRecalculateMin?.Invoke(this);
     }
 
+    /// <summary>
+    /// Recalculates the global min based on the ancestor's global min, scale, and rotation.
+    /// </summary>
     public virtual void RecalculateGlobalMin()
     {
         if (AncestorRectTransform is null)
@@ -330,7 +313,7 @@ public class RectTransform : Transform2D
             var rawGlobalMin = (
                 Min -
                 AncestorRectTransform.Pivot *
-                AncestorRectTransform.Size
+                AncestorRectTransform.FinalSize
             ) * AncestorRectTransform.GlobalScale;
             var parentRotation = AncestorRectTransform.GlobalRotation;
             globalMin = (
@@ -344,76 +327,119 @@ public class RectTransform : Transform2D
         OnRecalculateGlobalMin?.Invoke(this);
     }
 
-    protected virtual void RecalculateSizeWithAnchors()
+    /// <summary>
+    /// Recalculates the stretch size based on the anchors and the ancestor's size.
+    /// </summary>
+    protected virtual void RecalculateStretchSize()
     {
-        if (StretchWithAnchors && AncestorRectTransform is not null)
+        if (AncestorRectTransform is null)
         {
-            Size = AncestorRectTransform.Size * (AnchorMax - AnchorMin);
+            StretchSize = Size;
         }
+        else
+        {
+            StretchSize = AncestorRectTransform.FinalSize * (AnchorMax - AnchorMin);
+        }
+        OnRecalculateStretchSize?.Invoke(this);
     }
 
+    /// <summary>
+    /// Called when the parent position changes.
+    /// </summary>
+    /// <param name="parent"></param>
     protected override void OnParentPositionChanged(Transform2D parent)
     {
         base.OnParentPositionChanged(parent);
         DirtyGlobalMin = true;
     }
 
+    /// <summary>
+    /// Called when the parent rotation changes.
+    /// </summary>
+    /// <param name="parent"></param>
     protected override void OnParentRotationChanged(Transform2D parent)
     {
         base.OnParentRotationChanged(parent);
         DirtyGlobalMin = true;
     }
 
+    /// <summary>
+    /// Called when the parent scale changes.
+    /// </summary>
+    /// <param name="parent"></param>
     protected override void OnParentScaleChanged(Transform2D parent)
     {
         base.OnParentScaleChanged(parent);
         DirtyGlobalMin = true;
     }
 
+    /// <summary>
+    /// Called when the parent size changes.
+    /// </summary>
+    /// <param name="parent"></param>
     protected virtual void OnParentSizeChanged(RectTransform parent)
     {
         DirtyLocalMin = true;
         DirtyGlobalMin = true;
-        if (StretchWithAnchors)
-            RecalculateSizeWithAnchors();
+        DirtyStretchSize = true;
     }
 
+    /// <summary>
+    /// Called when the parent anchor min changes.
+    /// </summary>
+    /// <param name="parent"></param>
     protected virtual void OnParentAnchorMinChanged(RectTransform parent)
     {
         DirtyLocalMin = true;
         DirtyGlobalMin = true;
     }
 
+    /// <summary>
+    /// Called when the parent anchor max changes.
+    /// </summary>
+    /// <param name="parent"></param>
     protected virtual void OnParentAnchorMaxChanged(RectTransform parent)
     {
         DirtyLocalMin = true;
         DirtyGlobalMin = true;
     }
 
+    /// <summary>
+    /// Called when the parent pivot changes.
+    /// </summary>
+    /// <param name="parent"></param>
     protected virtual void OnParentPivotChanged(RectTransform parent)
     {
         DirtyGlobalMin = true;
     }
 
-    protected virtual void OnParentPaddingChanged(RectTransform parent)
-    {
-        DirtyLocalMin = true;
-        DirtyGlobalMin = true;
-    }
-
-    protected virtual void OnParentMarginChanged(RectTransform parent)
-    {
-
-    }
-
+    /// <summary>
+    /// Called when a parent recalculates its local min.
+    /// </summary>
+    /// <param name="parent"></param>
     protected virtual void OnParentRecalculateMin(RectTransform parent)
     {
         
     }
 
+    /// <summary>
+    /// Called when a parent recalculates its global min.
+    /// </summary>
+    /// <param name="parent"></param>
     protected virtual void OnParentRecalculateGlobalMin(RectTransform parent)
     {
         DirtyGlobalMin = true;
+    }
+
+    /// <summary>
+    /// Called when a parent recalculates its stretch size.
+    /// </summary>
+    /// <param name="parent"></param>
+    protected virtual void OnParentRecalculateStretchSize(RectTransform parent)
+    {
+        DirtyLocalMin = true;
+        DirtyGlobalMin = true;
+        DirtyStretchSize = true;
     }
 
     public override void MarkAllDirty()
@@ -421,8 +447,13 @@ public class RectTransform : Transform2D
         base.MarkAllDirty();
         DirtyLocalMin = true;
         DirtyGlobalMin = true;
+        DirtyStretchSize = true;
     }
 
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    /// <param name="child"></param>
     protected override void AttachChildToEvents(Transform2D child)
     {
         base.AttachChildToEvents(child);
@@ -432,13 +463,16 @@ public class RectTransform : Transform2D
             OnAnchorMinChanged += rectTransform.OnParentAnchorMinChanged;
             OnAnchorMaxChanged += rectTransform.OnParentAnchorMaxChanged;
             OnPivotChanged += rectTransform.OnParentPivotChanged;
-            OnPaddingChanged += rectTransform.OnParentPaddingChanged;
-            OnMarginChanged += rectTransform.OnParentMarginChanged;
             OnRecalculateMin += rectTransform.OnParentRecalculateMin;
             OnRecalculateGlobalMin += rectTransform.OnParentRecalculateGlobalMin;
+            OnRecalculateStretchSize += rectTransform.OnParentRecalculateStretchSize;
         }
     }
 
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    /// <param name="child"></param>
     protected override void DetachChildFromEvents(Transform2D child)
     {
         base.DetachChildFromEvents(child);
@@ -448,10 +482,9 @@ public class RectTransform : Transform2D
             OnAnchorMinChanged -= rectTransform.OnParentAnchorMinChanged;
             OnAnchorMaxChanged -= rectTransform.OnParentAnchorMaxChanged;
             OnPivotChanged -= rectTransform.OnParentPivotChanged;
-            OnPaddingChanged -= rectTransform.OnParentPaddingChanged;
-            OnMarginChanged -= rectTransform.OnParentMarginChanged;
             OnRecalculateMin -= rectTransform.OnParentRecalculateMin;
             OnRecalculateGlobalMin -= rectTransform.OnParentRecalculateGlobalMin;
+            OnRecalculateStretchSize -= rectTransform.OnParentRecalculateStretchSize;
         }
     }
 }

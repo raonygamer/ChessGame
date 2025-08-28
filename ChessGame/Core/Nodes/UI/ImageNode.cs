@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Core.Nodes;
+namespace Core.Nodes.UI;
 
 /// <summary>
 /// Represents an image control node.
@@ -56,7 +56,7 @@ public class ImageNode : ControlNode
                 Color, 
                 Transform.GlobalRotation,
                 Transform.Pivot * new Vector2(Texture.Width, Texture.Height), 
-                Transform.GlobalScale * (Transform.Size / new Vector2(Texture.Width, Texture.Height)), 
+                Transform.GlobalScale * (Transform.FinalSize / new Vector2(Texture.Width, Texture.Height)), 
                 SpriteEffects.None,
                 LayerDepth);
         }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Core;
-using Core.Nodes;
+using Core.Nodes.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 

@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Linq;
 using Core;
-using Core.Nodes;
+using Core.Components;
+using Core.Nodes.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -28,19 +29,16 @@ public class UITestState : State
         MainControl.Transform.Parent = Canvas.Transform;
         MainControl.Transform.Rotation = MathHelper.ToRadians(0);
         MainControl.Color = new Color(0, 0, 0, 0.5f);
-        MainControl.Transform.AnchorMin = new Vector2(0f, 0f);
-        MainControl.Transform.AnchorMax = new Vector2(1f, 1f);
-        MainControl.Transform.Margin = new Rectangle(10, 10, 10, 10);
-        MainControl.Transform.Padding = new Rectangle(10, 10, 10, 10);
-        MainControl.Transform.StretchWithAnchors = true;
+        MainControl.Transform.AnchorMin = new Vector2(0.25f, 0.25f);
+        MainControl.Transform.AnchorMax = new Vector2(0.75f, 0.75f);
+        MainControl.Transform.SizeMode = SizeMode.Stretch;
 
         Quad.Texture = tex2;
         Quad.Transform.Parent = MainControl.Transform;
-        // Quad.ClipsToBounds = true;
+        Quad.Transform.Position = new Vector2(10, 10);
         Quad.Transform.AnchorMin = new Vector2(0f, 0f);
         Quad.Transform.AnchorMax = new Vector2(1f, 1f);
-
-        Quad.Transform.StretchWithAnchors = true;
+        Quad.Transform.SizeMode = SizeMode.Stretch;
 
         Text.Text = "Hello, World! This is a test of the UI system. New line here.";
         Text.Transform.Parent = MainControl.Transform;

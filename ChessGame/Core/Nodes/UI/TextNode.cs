@@ -1,9 +1,10 @@
-﻿using System.Net.Mime;
+﻿using System.Collections.Generic;
+using System.Net.Mime;
 using Core.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Core.Nodes;
+namespace Core.Nodes.UI;
 
 /// <summary>
 /// Represents a basic text node.
@@ -58,7 +59,7 @@ public class TextNode : ControlNode
             {
                 var words = Text.Split(' ');
                 var currentLine = string.Empty;
-                var lines = new System.Collections.Generic.List<string>();
+                var lines = new List<string>();
 
                 foreach (var word in words)
                 {

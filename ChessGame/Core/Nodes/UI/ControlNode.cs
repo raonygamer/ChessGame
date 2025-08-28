@@ -1,7 +1,7 @@
 ﻿using Core.Components;
 using Core.Nodes.Interfaces;
 
-namespace Core.Nodes;
+namespace Core.Nodes.UI;
 
 /// <summary>
 /// Represents a control node for UI elements.

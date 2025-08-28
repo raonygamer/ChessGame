@@ -1,4 +1,4 @@
-﻿namespace Core.Nodes;
+﻿namespace Core.Nodes.UI;
 
 /// <summary>
 /// Represents a canvas node for control elements.
