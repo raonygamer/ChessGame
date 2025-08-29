@@ -19,6 +19,11 @@ namespace Core.Components
         /// <summary>
         /// The element uses anchors to determine its size relative to its parent.
         /// </summary>
-        Stretch
+        Stretch,
+
+        /// <summary>
+        /// The element sizes itself based on its content.
+        /// </summary>
+        Content
     }
 }

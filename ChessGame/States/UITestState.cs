@@ -30,27 +30,28 @@ public class UITestState : State
         MainControl.Transform.Parent = Canvas.Transform;
         MainControl.Transform.Rotation = MathHelper.ToRadians(0);
         MainControl.Color = new Color(0, 0, 0, 0.5f);
-        MainControl.Transform.AnchorMin = new Vector2(0, 0);
-        MainControl.Transform.AnchorMax = new Vector2(1, 1);
+        
         MainControl.Transform.SizeMode = new SizeMode2D
         {
-            X = SizeMode.Stretch,
-            Y = SizeMode.Stretch
+            X = SizeMode.Content,
+            Y = SizeMode.Content
         };
         MainControl.Transform.PaddingMin = new Vector2(10f, 10f);
         MainControl.Transform.PaddingMax = new Vector2(10f, 10f);
-
+        MainControl.Transform.AnchorMin = new Vector2(0.5f, 0.5f);
+        MainControl.Transform.Pivot = MainControl.Transform.AnchorMin;
         Quad.Texture = tex;
         Quad.Transform.Parent = MainControl.Transform;
         Quad.Color = new Color(0, 0, 0, 0.5f);
         Quad.Transform.AnchorMin = new Vector2(0f, 0f);
-        Quad.Transform.AnchorMax = new Vector2(1f, 1f);
+        Quad.Transform.Size = new Vector2(200, 100);
+        //Quad.Transform.AnchorMax = new Vector2(1f, 1f);
         Quad.Transform.PaddingMin = new Vector2(5f, 5f);
         Quad.Transform.PaddingMax = new Vector2(5f, 5f);
         Quad.Transform.SizeMode = new SizeMode2D
         {
             X = SizeMode.Fixed,
-            Y = SizeMode.Stretch
+            Y = SizeMode.Fixed
         };
 
         Text.Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
@@ -86,11 +87,14 @@ public class UITestState : State
     
     public override void Update(StateMachine machine, Game game, GameTime time)
     {
-        const float mult = 6f;
+        const float mult = 10f;
         var cos = Remap((float)Math.Cos(time.TotalGameTime.TotalSeconds * mult));
         var sin = Remap((float)Math.Sin(time.TotalGameTime.TotalSeconds * mult));
 
         const float margin = 10;
+        //Quad.Transform.Size = new Vector2(200 + cos * 75f, 100 + sin * 75f);
+        Quad.Transform.Position = new Vector2((1 - cos) * 10f, (1 - sin) * 10f);
+
         //Quad.Transform.MarginMin = new Vector2(margin * cos, margin * sin);
         //Quad.Transform.MarginMax = new Vector2(margin * (1 - cos), margin * (1 - sin));
 
